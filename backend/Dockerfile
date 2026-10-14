@@ -12,7 +12,8 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
-RUN npx prisma generate
+# Prisma Client（src/generated/prisma）は Git に含めず、compose ではホストのフォルダを重ねるため、
+# 起動時（npm run dev の predev）に生成する
 
 EXPOSE 4000
 CMD ["npm", "run", "dev"]

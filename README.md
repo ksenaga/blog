@@ -23,8 +23,10 @@
 ```bash
 cp .env.example .env        # 初回のみ
 docker compose up -d --build
-docker compose exec backend npx prisma migrate deploy   # 初回・マイグレーション追加時
 ```
+
+backend の起動時に、Prisma Client の生成（`prisma generate`）とマイグレーション（`prisma migrate deploy`）を自動で行う。
+ローカル（ホスト）に Node.js や Prisma を入れる必要はない。初回は準備に少し時間がかかり、backend の準備ができてから worker と frontend が起動する。
 
 動作確認：http://localhost:3000/api/v1/health が `{"status":"ok","db":"ok"}` を返せばOK。
 
@@ -54,6 +56,7 @@ docker compose exec backend npx prisma db seed
 | 停止 | `docker compose down` |
 | DB・画像も含めて全て消す | `docker compose down -v` |
 | ライブラリを追加した後 | `docker compose up -d --build -V`（`-V` でコンテナ内の node_modules を作り直す） |
+| うまく起動しないとき | `docker compose logs backend` で、Prisma Client の生成やマイグレーションのエラーを確認する |
 | マイグレーションを作る | `cd backend && npx prisma migrate dev --create-only --name 名前` → SQL を確認・追記 → `npx prisma migrate dev` |
 
 ## DB のマイグレーションの注意
