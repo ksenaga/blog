@@ -15,6 +15,7 @@ import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import AdminOnly from "@/components/cms/AdminOnly";
 import { useAuth } from "@/components/cms/AuthProvider";
+import AvatarUploader from "@/components/cms/AvatarUploader";
 import { useFeedback } from "@/components/cms/FeedbackProvider";
 import PageHeader from "@/components/cms/PageHeader";
 import PasswordField, { PASSWORD_HELP } from "@/components/cms/PasswordField";
@@ -102,6 +103,10 @@ function UserEdit({ id }: { id: string }) {
       <PageHeader title={user.name} description={`${user.email}・ブログ ${user.blog_count}件`} />
 
       <Stack spacing={3} sx={{ maxWidth: 720 }}>
+        <SectionCard title="アイコン">
+          <AvatarUploader user={user} onChange={setUser} />
+        </SectionCard>
+
         <SectionCard title="基本情報">
           <Stack component="form" onSubmit={handleSave} noValidate spacing={2.5}>
             <TextField

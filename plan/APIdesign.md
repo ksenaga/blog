@@ -161,6 +161,16 @@
 | U-5 | PUT | `/cms/users/{id}/password` | パスワード変更 | ✕ | 自分のみ |
 | U-6 | POST | `/cms/users/{id}/password-reset` | パスワードリセット | ○ | ✕ |
 | U-7 | DELETE | `/cms/users/{id}` | ユーザー削除 | ○ | 自分のみ |
+| U-8 | POST | `/cms/users/{id}/avatar` | アイコン画像の変更（`file`。正方形に切り抜き、256×256 の WebP に変換。EXIF は削除） | ○ | 自分のみ |
+| U-9 | DELETE | `/cms/users/{id}/avatar` | アイコン画像の削除 | ○ | 自分のみ |
+| TG-1 | GET | `/cms/tags` | タグ一覧（`q` で検索。使われている件数が多い順。`id`・`name`・`blog_count`・`template_count`・`created_at`） | ○ | ○ |
+| TG-2 | POST | `/cms/tags` | タグ作成（`name`。30文字以内、既にある名前は 400） | ○ | ○ |
+| TG-3 | PATCH | `/cms/tags/{id}` | タグ名の変更（全ての記事・テンプレートに反映。既にある名前は 400） | ○ | ○ |
+| TG-4 | DELETE | `/cms/tags/{id}` | タグ削除（全ての記事・テンプレートから外れる） | ○ | ○ |
+| TT-1 | GET | `/cms/tag-templates` | テンプレート一覧（`id`・`name`・`tags`・`created_by`・`editable`） | ○ | ○ |
+| TT-2 | POST | `/cms/tag-templates` | テンプレート作成（`name` 50文字以内、`tags` 1〜10個。ないタグは作る） | ○ | ○ |
+| TT-3 | PATCH | `/cms/tag-templates/{id}` | テンプレート編集 | ○ | 自分が作ったもののみ |
+| TT-4 | DELETE | `/cms/tag-templates/{id}` | テンプレート削除 | ○ | 自分が作ったもののみ |
 | D-1 | GET | `/cms/dashboard` | ダッシュボードの集計 | ○ | ○ |
 | D-2 | GET | `/cms/notifications` | 通知一覧 | ○ | ○ |
 | D-3 | PATCH | `/cms/notifications/{id}/read` | 通知を既読にする | ○ | ○ |
@@ -183,6 +193,7 @@
 |---|---|---|---|
 | `q` | string | | キーワード（タイトル・本文のテキストを部分一致で検索） |
 | `author_id` | integer | | 作者で絞り込む |
+| `tag` | string | | タグで絞り込む（大文字・小文字・全角半角の違いは区別しない） |
 | `page` / `per_page` | integer | | ページング |
 
 **レスポンス（200）** `data[]`
@@ -193,7 +204,8 @@
 | `title` | string | タイトル |
 | `excerpt` | string | 本文の先頭120文字程度（本文JSONからテキストだけを取り出してサーバー側で生成） |
 | `thumbnail_url` | string / null | 本文中の1枚目の画像。画像がなければ null |
-| `author` | object | `{ id, name }` |
+| `author` | object | `{ id, name, avatar_url }` |
+| `tags` | string[] | タグ（付けた順） |
 | `created_at` | datetime | 作成日時 |
 | `published_at` | datetime | 公開日時 |
 
@@ -217,7 +229,8 @@
 | `thumbnail_url` | string / null | 本文中の1枚目の画像（OGP画像に使う） |
 | `body_html` | string | 保存時に本文JSONから変換し、サニタイズしたHTML（5-7 参照） |
 | `images[]` | array | `{ id, url, alt, width, height }` |
-| `author` | object | `{ id, name }` |
+| `author` | object | `{ id, name, avatar_url }` |
+| `tags` | string[] | タグ（付けた順） |
 | `created_at` | datetime | 作成日時 |
 | `published_at` | datetime | 公開日時 |
 | `updated_at` | datetime | 更新日時 |
@@ -296,10 +309,10 @@
 
 | No | リクエスト | ルール・処理 | 成功時 |
 |---|---|---|---|
-| B-1 一覧 | `status`（カンマ区切りで複数指定可）、`author_id`（管理者のみ）、`q`（タイトル）、`sort`（`updated_at` / `created_at` / `published_at`）、`order`（`desc` / `asc`）、ページング | ユーザーは自分のブログのみ取得。`body` は返さない | 200 |
+| B-1 一覧 | `status`（カンマ区切りで複数指定可）、`author_id`（管理者のみ）、`q`（タイトル）、`tag`（タグ）、`sort`（`updated_at` / `created_at` / `published_at`）、`order`（`desc` / `asc`）、ページング | ユーザーは自分のブログのみ取得。`body` は返さない | 200 |
 | B-2 作成 | `title`、`body` | 作成時のステータスは常に `draft`。slug はUUIDを自動生成する。画像は作成後に B-9 でアップロード | 201 |
 | B-3 詳細 | なし | 削除済みのブログも閲覧できる | 200 |
-| B-4 編集 | `title`、`body`、`version`（必須） | 公開中なら 409 `BLOG_NOT_EDITABLE`。`version` が一致しなければ 409 `VERSION_CONFLICT`。slug は変更できない | 200 |
+| B-4 編集 | `title`、`body`、`tags`（文字列の配列。10個まで、1つ30文字以内）、`version`（必須） | 公開中なら 409 `BLOG_NOT_EDITABLE`。`version` が一致しなければ 409 `VERSION_CONFLICT`。slug は変更できない | 200 |
 | B-5 ステータス変更 | `status`、`published_at`、`version`（必須） | 5-2 の遷移ルールに従う | 200 |
 | B-6 削除 | なし | `deleted_at` に日時を入れる（論理削除）。公開中なら 409 | 204 |
 | B-7 削除一覧 | B-1 と同じ（`status` を除く） | `deleted_at` の降順。`deleted_by` と `restorable` を含める | 200 |
@@ -403,6 +416,7 @@
 | `name` | string | 表示名 |
 | `email` | string | メールアドレス（ログインID） |
 | `role` | string | `admin` / `user` |
+| `avatar_url` | string / null | アイコン画像のURL（未設定なら null） |
 | `blog_count` | integer | ブログ数 |
 | `created_at` | datetime | 作成日時 |
 | `updated_at` | datetime | 更新日時 |

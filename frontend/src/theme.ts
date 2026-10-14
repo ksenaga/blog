@@ -3,60 +3,74 @@
 import { createTheme } from "@mui/material/styles";
 import NextLink from "@/components/NextLink";
 
-// ライト・ダークの両方に対応したテーマ。色は CSS 変数として出力される
+// モダンでシンプルなテーマ：グレーを基本に、アクセントは黒（ダークモードは白）
+// 影やグラデーションは使わず、細い枠線と余白で区切る
 const theme = createTheme({
   cssVariables: { colorSchemeSelector: "class" },
   colorSchemes: {
     light: {
       palette: {
-        primary: { main: "#4f46e5" },
-        secondary: { main: "#db2777" },
-        background: { default: "#f7f7fb", paper: "#ffffff" },
-        text: { primary: "#1f2937", secondary: "#6b7280" },
-        divider: "rgba(15, 23, 42, 0.08)",
+        primary: { main: "#18181b", contrastText: "#ffffff" },
+        secondary: { main: "#2563eb" },
+        background: { default: "#ffffff", paper: "#ffffff" },
+        text: { primary: "#18181b", secondary: "#71717a", disabled: "#a1a1aa" },
+        divider: "#e4e4e7",
+        action: { hover: "rgba(24, 24, 27, 0.04)", selected: "rgba(24, 24, 27, 0.06)" },
       },
     },
     dark: {
       palette: {
-        primary: { main: "#a5b4fc" },
-        secondary: { main: "#f9a8d4" },
-        background: { default: "#0b0d17", paper: "#131627" },
-        text: { primary: "#e5e7eb", secondary: "#9ca3af" },
-        divider: "rgba(255, 255, 255, 0.08)",
+        primary: { main: "#fafafa", contrastText: "#18181b" },
+        secondary: { main: "#60a5fa" },
+        background: { default: "#09090b", paper: "#09090b" },
+        text: { primary: "#fafafa", secondary: "#a1a1aa", disabled: "#52525b" },
+        divider: "#27272a",
+        action: { hover: "rgba(250, 250, 250, 0.05)", selected: "rgba(250, 250, 250, 0.08)" },
       },
     },
   },
-  shape: { borderRadius: 14 },
+  shape: { borderRadius: 8 },
   typography: {
     fontFamily: "var(--font-noto-sans-jp), system-ui, sans-serif",
-    h1: { fontWeight: 800, letterSpacing: "-0.02em" },
-    h2: { fontWeight: 800, letterSpacing: "-0.02em" },
-    h3: { fontWeight: 700 },
-    h4: { fontWeight: 700 },
+    h1: { fontWeight: 700, letterSpacing: "-0.02em" },
+    h2: { fontWeight: 700, letterSpacing: "-0.02em" },
+    h3: { fontWeight: 700, letterSpacing: "-0.01em" },
+    h4: { fontWeight: 700, letterSpacing: "-0.01em" },
     h5: { fontWeight: 700 },
     h6: { fontWeight: 700 },
-    button: { fontWeight: 700, textTransform: "none" },
+    button: { fontWeight: 600, textTransform: "none" },
   },
   components: {
     // href を渡したボタンやカードは Next.js の Link で画面遷移する
     MuiButtonBase: {
-      defaultProps: { LinkComponent: NextLink },
+      defaultProps: { LinkComponent: NextLink, disableRipple: true },
     },
     MuiButton: {
       defaultProps: { disableElevation: true },
-      styleOverrides: { root: { borderRadius: 999, paddingInline: 20 } },
+      styleOverrides: { root: { borderRadius: 8, paddingInline: 16 } },
+    },
+    MuiIconButton: {
+      styleOverrides: { root: { borderRadius: 8 } },
+    },
+    MuiPaper: {
+      defaultProps: { elevation: 0 },
     },
     MuiCard: {
-      defaultProps: { elevation: 0 },
-      styleOverrides: {
-        root: ({ theme }) => ({
-          border: `1px solid ${theme.vars.palette.divider}`,
-          borderRadius: 20,
-        }),
-      },
+      defaultProps: { variant: "outlined" },
+      styleOverrides: { root: { borderRadius: 12 } },
     },
     MuiChip: {
-      styleOverrides: { root: { fontWeight: 600 } },
+      styleOverrides: { root: { fontWeight: 600, borderRadius: 6 } },
+    },
+    MuiTableCell: {
+      styleOverrides: { head: { fontSize: 13 } },
+    },
+    MuiAlert: {
+      defaultProps: { variant: "outlined" },
+      styleOverrides: { root: { borderRadius: 8 } },
+    },
+    MuiTooltip: {
+      styleOverrides: { tooltip: { fontSize: 12 } },
     },
   },
 });

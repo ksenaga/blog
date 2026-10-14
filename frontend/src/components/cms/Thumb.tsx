@@ -14,7 +14,7 @@ export default function Thumb({ src, size = 56 }: { src: string | null; size?: n
         width: size * (16 / 9),
         height: size,
         objectFit: "cover",
-        borderRadius: "10px",
+        borderRadius: "6px",
         flexShrink: 0,
         bgcolor: "action.hover",
         display: "block",

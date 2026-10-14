@@ -65,7 +65,7 @@ function NotificationList() {
           </Button>
         }
       />
-      <Paper variant="outlined" sx={{ borderRadius: "20px", overflow: "hidden" }}>
+      <Paper variant="outlined" sx={{ borderRadius: "12px", overflow: "hidden" }}>
         <Tabs value={tab} onChange={(_, value) => set({ tab: value === "unread" ? null : value })} sx={{ px: 2, borderBottom: 1, borderColor: "divider" }}>
           <Tab value="unread" label="未読" sx={{ fontWeight: 700 }} />
           <Tab value="all" label="すべて" sx={{ fontWeight: 700 }} />
@@ -97,34 +97,33 @@ function NotificationList() {
                   px: 3,
                   alignItems: "flex-start",
                   borderBottom: `1px solid ${theme.vars.palette.divider}`,
-                  bgcolor: unread ? `rgba(${theme.vars.palette.primary.mainChannel} / 0.04)` : "transparent",
+                  bgcolor: unread ? theme.vars.palette.action.hover : "transparent",
                 })}
               >
                 <Box
                   sx={{
                     display: "grid",
                     placeItems: "center",
-                    width: 40,
-                    height: 40,
-                    borderRadius: "12px",
+                    width: 36,
+                    height: 36,
+                    borderRadius: "8px",
                     flexShrink: 0,
-                    color: "#fff",
-                    background:
-                      notification.type === "password_reset_by_admin"
-                        ? "linear-gradient(135deg, #f59e0b, #f97316)"
-                        : "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                    color: "text.secondary",
+                    border: 1,
+                    borderColor: "divider",
+                    "& svg": { fontSize: 20 },
                   }}
                 >
                   {notification.type === "password_reset_by_admin" ? <KeyRoundedIcon /> : <EditNoteRoundedIcon />}
                 </Box>
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography sx={{ fontWeight: unread ? 700 : 400 }}>{notification.message}</Typography>
+                  <Typography sx={{ fontWeight: unread ? 600 : 400, fontSize: 15 }}>{notification.message}</Typography>
                   <Typography variant="caption" sx={{ color: "text.secondary" }}>
                     {formatDateTime(notification.created_at)}
                     {notification.blog?.deleted && "・このブログは削除されています"}
                   </Typography>
                 </Box>
-                {unread && <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: "secondary.main", mt: 1, flexShrink: 0 }} aria-label="未読" />}
+                {unread && <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: "error.main", mt: 1.2, flexShrink: 0 }} aria-label="未読" />}
               </ListItemButton>
             );
           })}

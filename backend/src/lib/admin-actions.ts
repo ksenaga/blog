@@ -18,18 +18,16 @@ type Params = {
   actor: AuthUser;
   ownerId: number; // 操作されたリソースの持ち主（ブログの作者・ユーザー本人）
   action: string; // 例：blog.update
-  targetType: "blog" | "user";
+  targetType: "blog" | "user" | "tag" | "tag_template";
   targetId: number;
   changes?: Prisma.InputJsonValue;
   notification?: { type: NotificationType; message: string; blogId?: number };
   request: Request;
 };
 
-// 自分のリソースの操作なら何もしない
-export async function recordAdminAction(params: Params, tx: Tx = prisma) {
-  if (params.actor.id === params.ownerId) return;
+// 操作ログを記録する（タグのように全員で共有するものは、誰が操作しても記録する）
+export async function recordAuditLog(params: Omit<Params, "ownerId" | "notification">, tx: Tx = prisma) {
   const { ipAddress, userAgent } = clientInfo(params.request);
-
   await tx.auditLog.create({
     data: {
       actorId: params.actor.id,
@@ -41,6 +39,12 @@ export async function recordAdminAction(params: Params, tx: Tx = prisma) {
       userAgent,
     },
   });
+}
+
+// 管理者が他人のリソースを操作したときの記録。自分のリソースの操作なら何もしない
+export async function recordAdminAction(params: Params, tx: Tx = prisma) {
+  if (params.actor.id === params.ownerId) return;
+  await recordAuditLog(params, tx);
 
   if (params.notification) {
     await tx.notification.create({

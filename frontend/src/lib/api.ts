@@ -4,7 +4,7 @@ import "server-only";
 
 const BACKEND_URL = process.env.BACKEND_URL ?? "http://localhost:4000";
 
-export type Author = { id: number; name: string };
+export type Author = { id: number; name: string; avatar_url: string | null };
 
 export type BlogSummary = {
   slug: string;
@@ -12,6 +12,7 @@ export type BlogSummary = {
   excerpt: string;
   thumbnail_url: string | null;
   author: Author;
+  tags: string[];
   created_at: string;
   published_at: string;
 };
@@ -33,12 +34,14 @@ async function request(path: string) {
 export async function getBlogs(params: {
   q?: string;
   authorId?: number;
+  tag?: string;
   page?: number;
   perPage?: number;
 }): Promise<{ data: BlogSummary[]; meta: PageMeta }> {
   const query = new URLSearchParams();
   if (params.q) query.set("q", params.q);
   if (params.authorId) query.set("author_id", String(params.authorId));
+  if (params.tag) query.set("tag", params.tag);
   if (params.page) query.set("page", String(params.page));
   if (params.perPage) query.set("per_page", String(params.perPage));
 

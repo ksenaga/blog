@@ -10,7 +10,7 @@ export default function ForbiddenView({ message = "この操作を行う権限�
   return (
     <Box sx={{ py: 12, textAlign: "center" }}>
       <GppMaybeOutlinedIcon sx={{ fontSize: 64, color: "warning.main" }} />
-      <Typography variant="overline" sx={{ display: "block", mt: 2, fontWeight: 800, letterSpacing: "0.3em", color: "text.secondary" }}>
+      <Typography variant="overline" sx={{ display: "block", mt: 2, fontWeight: 700, letterSpacing: "0.3em", color: "text.secondary" }}>
         403 FORBIDDEN
       </Typography>
       <Typography variant="h5" component="h1">

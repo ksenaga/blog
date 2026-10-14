@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
+import Chip from "@mui/material/Chip";
 import CardActionArea from "@mui/material/CardActionArea";
 import IconButton from "@mui/material/IconButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -109,7 +110,7 @@ function BlogList() {
         }
       />
 
-      <Paper variant="outlined" sx={{ borderRadius: "20px", overflow: "hidden" }}>
+      <Paper variant="outlined" sx={{ borderRadius: "12px", overflow: "hidden" }}>
         <Tabs
           value={get("status")}
           onChange={(_, value) => set({ status: value })}
@@ -125,6 +126,9 @@ function BlogList() {
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ p: 2, flexWrap: "wrap", rowGap: 1.5 }}>
           <SearchField value={get("q")} onChange={(q) => set({ q })} placeholder="タイトルで検索" />
           {isAdmin && <AuthorSelect value={get("author_id")} onChange={(value) => set({ author_id: value })} />}
+          {get("tag") && (
+            <Chip label={`#${get("tag")}`} onDelete={() => set({ tag: null })} sx={{ alignSelf: "center" }} />
+          )}
           <TextField
             select
             size="small"

@@ -15,6 +15,7 @@ import {
   versionConflict,
 } from "@/lib/cms-blog";
 import { prisma } from "@/lib/prisma";
+import { setBlogTags, tagNames, tagsSchema } from "@/lib/tags";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -31,6 +32,7 @@ export async function GET(request: Request, { params }: Context) {
 const updateSchema = z.object({
   title: z.string().trim().min(1).max(100).optional(),
   body: z.unknown().optional(),
+  tags: tagsSchema.optional(),
   version: z.number().int().positive(),
 });
 
@@ -40,7 +42,7 @@ export async function PATCH(request: Request, { params }: Context) {
 
   const parsed = updateSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return validationError(parsed.error);
-  const { title, body, version } = parsed.data;
+  const { title, body, tags, version } = parsed.data;
 
   const blog = await loadBlog(Number((await params).id), user, { publishDue: true });
   if (blog instanceof Response) return blog;
@@ -63,6 +65,7 @@ export async function PATCH(request: Request, { params }: Context) {
       },
     });
     if (count === 0) return false;
+    if (tags !== undefined) await setBlogTags(tx, blog.id, tags);
 
     await recordAdminAction(
       {
@@ -75,6 +78,7 @@ export async function PATCH(request: Request, { params }: Context) {
         changes: {
           ...(title !== undefined && title !== blog.title && { title: { before: blog.title, after: title } }),
           ...(body !== undefined && { body: "changed" }),
+          ...(tags !== undefined && { tags: { before: tagNames(blog.tags), after: tags } }),
         },
         notification: {
           type: "blog_updated_by_admin",

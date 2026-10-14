@@ -8,7 +8,11 @@ import type { JSONContent } from "@tiptap/core";
 import { imageIds, toHtml, toText } from "@/lib/blog-content";
 import { prisma } from "@/lib/prisma";
 import { storage } from "@/lib/storage";
-import { rm } from "node:fs/promises";
+import { resolveTagIds, setBlogTags } from "@/lib/tags";
+import { processAvatar, saveAvatar } from "@/lib/avatar";
+
+import { readFile, rm } from "node:fs/promises";
+import path from "node:path";
 
 if (process.env.NODE_ENV === "production") {
   throw new Error("本番環境では seed を実行できません");
@@ -50,9 +54,10 @@ type Block = JSONContent | ReturnType<typeof img>;
 
 type SeedBlog = {
   title: string;
-  author: "sato" | "yamada" | "suzuki";
+  author: "sato" | "yamada" | "suzuki" | "takahashi" | "ito";
   status: "public" | "private" | "draft" | "scheduled";
   daysAgo: number; // 公開日（何日前か。公開予定はマイナスで未来）
+  tags: string[];
   palette: [string, string, string][]; // 画像ごとの配色
   body: Block[];
 };
@@ -94,6 +99,7 @@ const blogs: SeedBlog[] = [
   {
     title: "はじめての沖縄ひとり旅 ― 青い海と島時間をめぐる3日間",
     author: "yamada",
+    tags: ["旅行", "沖縄", "ひとり旅"],
     status: "public",
     daysAgo: 2,
     palette: [palettes.ocean, palettes.mint, palettes.sky],
@@ -115,6 +121,7 @@ const blogs: SeedBlog[] = [
   {
     title: "朝の30分で人生が変わる ― 続けられるモーニングルーティン",
     author: "suzuki",
+    tags: ["暮らし", "習慣"],
     status: "public",
     daysAgo: 5,
     palette: [palettes.sky, palettes.sunset],
@@ -131,6 +138,7 @@ const blogs: SeedBlog[] = [
   {
     title: "自家焙煎に挑戦！ 手網で始めるコーヒーのある暮らし",
     author: "sato",
+    tags: ["コーヒー", "暮らし", "趣味"],
     status: "public",
     daysAgo: 9,
     palette: [palettes.coffee, palettes.ember, palettes.coffee],
@@ -151,6 +159,7 @@ const blogs: SeedBlog[] = [
   {
     title: "TypeScript を学んで分かった「型」のありがたさ",
     author: "yamada",
+    tags: ["プログラミング", "TypeScript", "学び"],
     status: "public",
     daysAgo: 14,
     palette: [palettes.night, palettes.grape],
@@ -167,6 +176,7 @@ const blogs: SeedBlog[] = [
   {
     title: "春の京都、桜めぐり ― 混雑を避けて楽しむ穴場スポット",
     author: "suzuki",
+    tags: ["旅行", "京都", "写真"],
     status: "public",
     daysAgo: 20,
     palette: [palettes.sakura, palettes.grape, palettes.sakura],
@@ -183,7 +193,8 @@ const blogs: SeedBlog[] = [
   },
   {
     title: "週末の作り置き 10品 ― 平日の夕食がぐっと楽になる",
-    author: "sato",
+    author: "takahashi",
+    tags: ["料理", "暮らし"],
     status: "public",
     daysAgo: 27,
     palette: [palettes.forest, palettes.sunset],
@@ -199,7 +210,8 @@ const blogs: SeedBlog[] = [
   },
   {
     title: "フィルムカメラで撮る、何気ない毎日",
-    author: "yamada",
+    author: "ito",
+    tags: ["写真", "趣味"],
     status: "public",
     daysAgo: 33,
     palette: [palettes.ember, palettes.coffee, palettes.sunset],
@@ -216,6 +228,7 @@ const blogs: SeedBlog[] = [
   {
     title: "リモートワーク3年目、作業環境を見直してみた",
     author: "suzuki",
+    tags: ["仕事", "暮らし"],
     status: "public",
     daysAgo: 41,
     palette: [palettes.mint, palettes.night],
@@ -232,6 +245,7 @@ const blogs: SeedBlog[] = [
   {
     title: "はじめての登山 ― 高尾山で見つけた山歩きの楽しさ",
     author: "sato",
+    tags: ["アウトドア", "旅行"],
     status: "public",
     daysAgo: 50,
     palette: [palettes.forest, palettes.sky, palettes.forest],
@@ -249,6 +263,7 @@ const blogs: SeedBlog[] = [
   {
     title: "読書記録のすすめ ― 1年で50冊読めた小さな習慣",
     author: "yamada",
+    tags: ["読書", "習慣", "学び"],
     status: "public",
     daysAgo: 62,
     palette: [palettes.grape, palettes.coffee],
@@ -263,7 +278,8 @@ const blogs: SeedBlog[] = [
   },
   {
     title: "ベランダ菜園でミニトマトを育てる",
-    author: "suzuki",
+    author: "ito",
+    tags: ["暮らし", "趣味"],
     status: "public",
     daysAgo: 75,
     palette: [palettes.ember, palettes.forest],
@@ -278,7 +294,8 @@ const blogs: SeedBlog[] = [
   },
   {
     title: "夜空を見上げよう ― 都会でもできる星空観察",
-    author: "sato",
+    author: "takahashi",
+    tags: ["趣味", "アウトドア"],
     status: "public",
     daysAgo: 90,
     palette: [palettes.night, palettes.night, palettes.grape],
@@ -297,6 +314,7 @@ const blogs: SeedBlog[] = [
   {
     title: "【非公開】キャンプ道具の選び方（加筆修正中）",
     author: "yamada",
+    tags: ["アウトドア"],
     status: "private",
     daysAgo: 30,
     palette: [palettes.forest],
@@ -305,6 +323,7 @@ const blogs: SeedBlog[] = [
   {
     title: "【下書き】秋のおすすめ紅葉スポット",
     author: "sato",
+    tags: ["旅行"],
     status: "draft",
     daysAgo: 0,
     palette: [palettes.sunset],
@@ -313,6 +332,7 @@ const blogs: SeedBlog[] = [
   {
     title: "【公開予定】年末の大掃除チェックリスト",
     author: "suzuki",
+    tags: ["暮らし"],
     status: "scheduled",
     daysAgo: -7,
     palette: [palettes.sky],
@@ -323,9 +343,10 @@ const blogs: SeedBlog[] = [
 async function main() {
   console.log("既存のデータを削除しています…");
   await prisma.$executeRawUnsafe(
-    'TRUNCATE "notifications", "audit_logs", "refresh_tokens", "login_attempts", "blog_images", "blogs", "users" RESTART IDENTITY CASCADE',
+    'TRUNCATE "notifications", "audit_logs", "refresh_tokens", "login_attempts", "tag_template_tags", "tag_templates", "blog_tags", "tags", "blog_images", "blogs", "users" RESTART IDENTITY CASCADE',
   );
   await rm(`${process.env.LOCAL_STORAGE_DIR ?? "./storage"}/blogs`, { recursive: true, force: true });
+  await rm(`${process.env.LOCAL_STORAGE_DIR ?? "./storage"}/avatars`, { recursive: true, force: true });
 
   console.log("ユーザーを作成しています…");
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
@@ -339,7 +360,29 @@ async function main() {
     suzuki: await prisma.user.create({
       data: { name: "鈴木 一郎", email: "suzuki@example.com", passwordHash, role: "user" },
     }),
+    takahashi: await prisma.user.create({
+      data: { name: "高橋 健太", email: "takahashi@example.com", passwordHash, role: "user" },
+    }),
+    ito: await prisma.user.create({
+      data: { name: "伊藤 さくら", email: "ito@example.com", passwordHash, role: "user" },
+    }),
   };
+
+  // アイコン画像（prisma/seed-assets/avatars）
+  const avatarFiles: Record<keyof typeof users, string> = {
+    sato: "1.webp",
+    yamada: "4.webp",
+    suzuki: "5.webp",
+    takahashi: "2.webp",
+    ito: "3.webp",
+  };
+  for (const [key, file] of Object.entries(avatarFiles) as [keyof typeof users, string][]) {
+    const data = await processAvatar(await readFile(path.join(process.cwd(), "prisma/seed-assets/avatars", file)));
+    if (data) {
+      const avatarStorageKey = await saveAvatar(users[key].id, data);
+      await prisma.user.update({ where: { id: users[key].id }, data: { avatarStorageKey } });
+    }
+  }
 
   console.log("ブログを作成しています…");
   const now = Date.now();
@@ -412,11 +455,28 @@ async function main() {
       },
     });
 
+    await setBlogTags(prisma, blog.id, seed.tags);
+
     console.log(`  [${seed.status}] /blog/${blog.slug}  ${seed.title}`);
   }
 
+  console.log("タグのテンプレートを作成しています…");
+  const templates: [string, string[], keyof typeof users][] = [
+    ["旅行記", ["旅行", "写真", "ひとり旅"], "sato"],
+    ["暮らしのアイデア", ["暮らし", "習慣"], "yamada"],
+    ["学びの記録", ["学び", "読書", "習慣"], "suzuki"],
+  ];
+  for (const [name, tags, owner] of templates) {
+    const template = await prisma.tagTemplate.create({ data: { name, createdById: users[owner].id } });
+    const tagIds = await resolveTagIds(prisma, tags);
+    await prisma.tagTemplateTag.createMany({
+      data: tagIds.map((tagId, position) => ({ templateId: template.id, tagId, position })),
+    });
+  }
+
   console.log("\n完了しました。ログイン用のテストユーザー（パスワードは全員 password123）");
-  console.log("  管理者：admin@example.com / ユーザー：yamada@example.com, suzuki@example.com");
+  console.log("  管理者：admin@example.com");
+  console.log("  ユーザー：yamada@example.com, suzuki@example.com, takahashi@example.com, ito@example.com");
 }
 
 main()

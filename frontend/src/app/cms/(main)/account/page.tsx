@@ -10,6 +10,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { useAuth } from "@/components/cms/AuthProvider";
+import AvatarUploader from "@/components/cms/AvatarUploader";
 import { useFeedback } from "@/components/cms/FeedbackProvider";
 import PageHeader from "@/components/cms/PageHeader";
 import PasswordField, { PASSWORD_HELP } from "@/components/cms/PasswordField";
@@ -99,6 +100,16 @@ export default function AccountPage() {
     <>
       <PageHeader title="アカウント設定" />
       <Stack spacing={3} sx={{ maxWidth: 720 }}>
+        <SectionCard title="アイコン" description="ブログの一覧や記事の最後に表示されます。">
+          <AvatarUploader
+            user={account}
+            onChange={(data) => {
+              setAccount(data);
+              updateUser({ avatar_url: data.avatar_url });
+            }}
+          />
+        </SectionCard>
+
         <SectionCard title="基本情報">
           <Stack component="form" onSubmit={handleSave} noValidate spacing={2.5}>
             <TextField

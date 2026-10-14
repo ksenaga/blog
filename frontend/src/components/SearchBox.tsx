@@ -38,17 +38,13 @@ export default function SearchBox({ autoFocus, size = "medium", onSubmitted }: P
         display: "flex",
         alignItems: "center",
         gap: 1,
-        px: large ? 2.5 : 1.75,
-        height: large ? 56 : 42,
-        borderRadius: 999,
+        px: 1.5,
+        height: large ? 48 : 38,
+        borderRadius: "8px",
         border: `1px solid ${theme.vars.palette.divider}`,
-        backgroundColor: large ? "background.paper" : `rgba(${theme.vars.palette.text.primaryChannel} / 0.04)`,
-        boxShadow: large ? "0 12px 32px rgba(15, 23, 42, 0.12)" : "none",
-        transition: "border-color 0.2s, box-shadow 0.2s",
-        "&:focus-within": {
-          borderColor: theme.vars.palette.primary.main,
-          boxShadow: `0 0 0 4px rgba(${theme.vars.palette.primary.mainChannel} / 0.15)`,
-        },
+        backgroundColor: "background.default",
+        transition: "border-color 0.15s",
+        "&:focus-within": { borderColor: theme.vars.palette.text.secondary },
       })}
     >
       <SearchIcon sx={{ color: "text.secondary" }} fontSize={large ? "medium" : "small"} />

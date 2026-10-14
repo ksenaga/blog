@@ -21,7 +21,7 @@ export default function SectionCard({
     <Paper
       variant="outlined"
       sx={(theme) => ({
-        borderRadius: "20px",
+        borderRadius: "12px",
         p: { xs: 2.5, md: 3.5 },
         ...(danger && { borderColor: `rgba(${theme.vars.palette.error.mainChannel} / 0.4)` }),
       })}

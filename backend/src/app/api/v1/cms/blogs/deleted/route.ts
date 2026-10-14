@@ -2,7 +2,7 @@
 import type { Prisma } from "@/generated/prisma/client";
 import { paginationMeta, searchParamsToObject, validationError } from "@/lib/api";
 import { authenticate } from "@/lib/auth";
-import { listOrderBy, listQuerySchema, ownerWhere, serializeBlog } from "@/lib/cms-blog";
+import { blogInclude, listOrderBy, listQuerySchema, ownerWhere, serializeBlog } from "@/lib/cms-blog";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
@@ -30,11 +30,7 @@ export async function GET(request: Request) {
       orderBy: listOrderBy(sort, order),
       skip: (page - 1) * perPage,
       take: perPage,
-      include: {
-        author: { select: { id: true, name: true, deletedAt: true } },
-        deletedBy: { select: { id: true, name: true } },
-        images: { orderBy: { id: "asc" } },
-      },
+      include: blogInclude,
     }),
   ]);
 

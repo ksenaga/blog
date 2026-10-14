@@ -6,11 +6,12 @@ import { isIP } from "node:net";
 import { SignJWT, jwtVerify } from "jose";
 import { NextResponse, type NextRequest } from "next/server";
 import { errorResponse } from "@/lib/api";
+import { avatarUrl } from "@/lib/avatar";
 import { config } from "@/lib/config";
 import { prisma } from "@/lib/prisma";
 
 export type Role = "admin" | "user";
-export type AuthUser = { id: number; name: string; email: string; role: Role };
+export type AuthUser = { id: number; name: string; email: string; role: Role; avatar_url: string | null };
 
 const REFRESH_COOKIE = "refresh_token";
 // リフレッシュトークンは認証APIにだけ送られるようにする
@@ -24,8 +25,20 @@ function jwtSecret() {
 
 const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
-export function toAuthUser(user: { id: number; name: string; email: string; role: string }): AuthUser {
-  return { id: user.id, name: user.name, email: user.email, role: user.role as Role };
+export function toAuthUser(user: {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  avatarStorageKey: string | null;
+}): AuthUser {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role as Role,
+    avatar_url: avatarUrl(user.avatarStorageKey),
+  };
 }
 
 // ---------- アクセストークン ----------

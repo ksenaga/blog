@@ -15,6 +15,7 @@ import ArticleMeta from "@/components/ArticleMeta";
 import AuthorAvatar from "@/components/AuthorAvatar";
 import BlogGrid from "@/components/BlogGrid";
 import NextLink from "@/components/NextLink";
+import TagList from "@/components/TagList";
 import { getBlog, getBlogs } from "@/lib/api";
 import { formatDate, isSameDay, readingMinutes } from "@/lib/format";
 
@@ -56,7 +57,7 @@ export default async function BlogPage({ params }: PageProps<"/blog/[slug]">) {
           一覧へ戻る
         </Button>
 
-        <Box component="header" sx={{ mt: 3, textAlign: { md: "center" } }}>
+        <Box component="header" sx={{ mt: 3 }}>
           <ArticleMeta
             publishedDate={formatDate(blog.published_at)}
             updatedDate={isSameDay(blog.published_at, blog.updated_at) ? undefined : formatDate(blog.updated_at)}
@@ -65,25 +66,13 @@ export default async function BlogPage({ params }: PageProps<"/blog/[slug]">) {
           <Typography
             variant="h3"
             component="h1"
-            sx={{ mt: 2.5, fontSize: { xs: 26, sm: 32, md: 40 }, lineHeight: 1.4 }}
+            sx={{ mt: 2, fontSize: { xs: 26, sm: 32, md: 36 }, lineHeight: 1.4 }}
           >
             {blog.title}
           </Typography>
-          <Stack
-            direction="row"
-            spacing={1.5}
-            sx={{ mt: 3, alignItems: "center", justifyContent: { md: "center" } }}
-          >
-            <AuthorAvatar author={blog.author} size={40} />
-            <Link
-              component={NextLink}
-              href={`/search?author_id=${blog.author.id}`}
-              underline="hover"
-              sx={{ color: "text.primary", fontWeight: 700 }}
-            >
-              {blog.author.name}
-            </Link>
-          </Stack>
+          <Box sx={{ mt: 2.5 }}>
+            <TagList tags={blog.tags} size="medium" />
+          </Box>
         </Box>
       </Container>
 
@@ -97,7 +86,7 @@ export default async function BlogPage({ params }: PageProps<"/blog/[slug]">) {
             <Typography variant="caption" sx={{ color: "text.secondary" }}>
               この記事を書いた人
             </Typography>
-            <Typography sx={{ fontWeight: 800, fontSize: 18 }}>{blog.author.name}</Typography>
+            <Typography sx={{ fontWeight: 700, fontSize: 18 }}>{blog.author.name}</Typography>
             <Link component={NextLink} href={`/search?author_id=${blog.author.id}`} variant="body2">
               {blog.author.name} の記事をもっと見る
             </Link>
@@ -106,8 +95,8 @@ export default async function BlogPage({ params }: PageProps<"/blog/[slug]">) {
       </Container>
 
       {others.length > 0 && (
-        <Container maxWidth="lg" sx={{ mt: 10 }}>
-          <Typography variant="h5" component="h2" sx={{ mb: 3 }}>
+        <Container maxWidth="lg" sx={{ mt: 10, pt: 6, borderTop: 1, borderColor: "divider" }}>
+          <Typography variant="h6" component="h2" sx={{ mb: 4 }}>
             新着記事
           </Typography>
           <BlogGrid blogs={others} emptyMessage="" />

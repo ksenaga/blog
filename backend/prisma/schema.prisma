@@ -13,16 +13,18 @@ datasource db {
 
 // 4-1. ユーザー
 model User {
-  id           Int       @id @default(autoincrement())
-  name         String    @db.VarChar(50)
+  id               Int       @id @default(autoincrement())
+  name             String    @db.VarChar(50)
   // 削除されていないユーザーの中でのみユニーク（部分ユニークインデックスはSQLで作成）
-  email        String    @db.VarChar(255)
-  passwordHash String    @map("password_hash") @db.VarChar(255)
+  email            String    @db.VarChar(255)
+  passwordHash     String    @map("password_hash") @db.VarChar(255)
   // 'admin' / 'user'（CHECK 制約はSQLで作成）
-  role         String    @default("user") @db.VarChar(10)
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+  role             String    @default("user") @db.VarChar(10)
+  // アイコン画像の保存先（未設定なら NULL。画面では名前の1文字目を表示する）
+  avatarStorageKey String?   @map("avatar_storage_key") @db.VarChar(255)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
 
   blogs              Blog[]         @relation("BlogAuthor")
   deletedBlogs       Blog[]         @relation("BlogDeletedBy")
@@ -31,6 +33,7 @@ model User {
   notifications      Notification[] @relation("NotificationRecipient")
   actedNotifications Notification[] @relation("NotificationActor")
   auditLogs          AuditLog[]
+  tagTemplates       TagTemplate[]
 
   @@map("users")
 }
@@ -61,6 +64,7 @@ model Blog {
   thumbnail     BlogImage?     @relation("BlogThumbnail", fields: [thumbnailImageId], references: [id], onDelete: SetNull)
   images        BlogImage[]    @relation("BlogImages")
   notifications Notification[]
+  tags          BlogTag[]
 
   // キーワードの部分一致検索（pg_trgm 拡張はマイグレーションSQLで作成）
   @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "blogs_title_trgm_idx")
@@ -87,6 +91,64 @@ model BlogImage {
 
   @@index([blogId])
   @@map("blog_images")
+}
+
+// 4-8. タグ
+model Tag {
+  id        Int      @id @default(autoincrement())
+  // 大文字・小文字の違いは同じタグとして扱う（アプリ側で既存のタグを探して使う）
+  name      String   @unique @db.VarChar(30)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  blogs     BlogTag[]
+  templates TagTemplateTag[]
+
+  @@map("tags")
+}
+
+// 4-9. ブログとタグの紐付け
+model BlogTag {
+  blogId   Int @map("blog_id")
+  tagId    Int @map("tag_id")
+  // タグの表示順（付けた順）
+  position Int @default(0)
+
+  blog Blog @relation(fields: [blogId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([blogId, tagId])
+  @@index([tagId])
+  @@map("blog_tags")
+}
+
+// 4-10. タグのテンプレート（全員で共有する）
+model TagTemplate {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(50)
+  createdById Int      @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  createdBy User             @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  tags      TagTemplateTag[]
+
+  @@map("tag_templates")
+}
+
+// 4-11. テンプレートに含めるタグ
+model TagTemplateTag {
+  templateId Int @map("template_id")
+  tagId      Int @map("tag_id")
+  // 表示順（登録した順）
+  position   Int @default(0)
+
+  template TagTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  // タグを削除したら、テンプレートからも外す
+  tag      Tag         @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([templateId, tagId])
+  @@index([tagId])
+  @@map("tag_template_tags")
 }
 
 // 4-4. リフレッシュトークン

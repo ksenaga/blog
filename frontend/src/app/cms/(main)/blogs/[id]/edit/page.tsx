@@ -39,6 +39,8 @@ import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined
 import { useAuth } from "@/components/cms/AuthProvider";
 import { useFeedback } from "@/components/cms/FeedbackProvider";
 import StatusChip from "@/components/cms/StatusChip";
+import TagInput from "@/components/cms/TagInput";
+import TemplateMenu from "@/components/cms/TemplateMenu";
 import EditorToolbar from "@/components/cms/editor/EditorToolbar";
 import { editorStyles } from "@/components/cms/editor/editorStyles";
 import { blogEditorExtensions } from "@/components/cms/editor/extensions";
@@ -58,10 +60,12 @@ export default function BlogEditPage({ params }: PageProps<"/cms/blogs/[id]/edit
   const [blog, setBlog] = useState<CmsBlog | null>(null);
   const [title, setTitle] = useState("");
   const [savedTitle, setSavedTitle] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [savedTags, setSavedTags] = useState<string[]>([]);
   const [bodyDirty, setBodyDirty] = useState(false);
   // 最後に読み込み・保存した本文。エディタが読み込み時に整える内容（末尾の空の段落など）を変更と数えないよう、比べて判定する
   const savedBody = useRef("");
-  const dirty = bodyDirty || title !== savedTitle;
+  const dirty = bodyDirty || title !== savedTitle || tags.join("\n") !== savedTags.join("\n");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(0);
   const [scheduleOpen, setScheduleOpen] = useState(false);
@@ -101,6 +105,8 @@ export default function BlogEditPage({ params }: PageProps<"/cms/blogs/[id]/edit
       if (options.content && editor) {
         setTitle(data.title);
         setSavedTitle(data.title);
+        setTags(data.tags);
+        setSavedTags(data.tags);
         editor.commands.setContent(data.body ?? { type: "doc", content: [] }, { emitUpdate: false });
         savedBody.current = JSON.stringify(editor.getJSON());
         setBodyDirty(false);
@@ -159,13 +165,15 @@ export default function BlogEditPage({ params }: PageProps<"/cms/blogs/[id]/edit
     try {
       const { data } = await api<{ data: CmsBlog }>(`/cms/blogs/${blog.id}`, {
         method: "PATCH",
-        body: { title: title.trim(), body, version: blog.version },
+        body: { title: title.trim(), body, tags, version: blog.version },
       });
       applyBlog(data, { content: false });
       // 保存した内容を基準にする
       savedBody.current = JSON.stringify(body);
       setSavedTitle(data.title);
       setTitle(data.title);
+      setSavedTags(data.tags);
+      setTags(data.tags);
       setBodyDirty(JSON.stringify(editor.getJSON()) !== savedBody.current);
       return data;
     } catch (error) {
@@ -175,7 +183,7 @@ export default function BlogEditPage({ params }: PageProps<"/cms/blogs/[id]/edit
     } finally {
       setSaving(false);
     }
-  }, [blog, editor, title, applyBlog, handleConflict, toast, toastError]);
+  }, [blog, editor, title, tags, applyBlog, handleConflict, toast, toastError]);
 
   async function handleSave() {
     if (await save()) toast("保存しました");
@@ -235,6 +243,7 @@ export default function BlogEditPage({ params }: PageProps<"/cms/blogs/[id]/edit
       await api(`/cms/blogs/${blog.id}`, { method: "DELETE" });
       savedBody.current = JSON.stringify(editor?.getJSON());
       setSavedTitle(title);
+      setSavedTags(tags);
       setBodyDirty(false);
       toast("削除しました");
       router.push("/cms/blogs");
@@ -328,7 +337,7 @@ export default function BlogEditPage({ params }: PageProps<"/cms/blogs/[id]/edit
           <Alert
             severity="warning"
             action={
-              <Button color="inherit" size="small" onClick={handleMakePrivate} sx={{ fontWeight: 800 }}>
+              <Button color="inherit" size="small" onClick={handleMakePrivate} sx={{ fontWeight: 700 }}>
                 非公開にする
               </Button>
             }
@@ -349,7 +358,7 @@ export default function BlogEditPage({ params }: PageProps<"/cms/blogs/[id]/edit
       <Grid container spacing={3}>
         {/* 左：タイトルと本文 */}
         <Grid size={{ xs: 12, md: 8 }}>
-          <Paper variant="outlined" sx={{ borderRadius: "20px", p: { xs: 2, sm: 3, md: 4 } }}>
+          <Paper variant="outlined" sx={{ borderRadius: "12px", p: { xs: 2, sm: 3, md: 4 } }}>
             <InputBase
               value={title}
               onChange={(event) => setTitle(event.target.value.slice(0, TITLE_MAX))}
@@ -358,7 +367,7 @@ export default function BlogEditPage({ params }: PageProps<"/cms/blogs/[id]/edit
               fullWidth
               readOnly={!blog.editable}
               slotProps={{ input: { "aria-label": "タイトル", maxLength: TITLE_MAX } }}
-              sx={{ fontSize: { xs: 24, md: 32 }, fontWeight: 800, lineHeight: 1.4 }}
+              sx={{ fontSize: { xs: 24, md: 30 }, fontWeight: 700, lineHeight: 1.4 }}
             />
             <Typography variant="caption" sx={{ display: "block", textAlign: "right", color: title.length >= TITLE_MAX ? "error.main" : "text.secondary" }}>
               残り {TITLE_MAX - title.length} 文字
@@ -419,6 +428,11 @@ export default function BlogEditPage({ params }: PageProps<"/cms/blogs/[id]/edit
                   </Button>
                 )}
               </Stack>
+            </SideCard>
+
+            <SideCard title="タグ">
+              <TagInput value={tags} onChange={setTags} disabled={!blog.editable} />
+              <TemplateMenu value={tags} onChange={setTags} disabled={!blog.editable} />
             </SideCard>
 
             <SideCard title="公開URL">
@@ -489,19 +503,18 @@ function ImagePanel({ editor }: { editor: Editor }) {
   return (
     <Paper
       variant="outlined"
-      sx={(theme) => ({
+      sx={{
         mt: 1.5,
         p: 1.5,
-        borderRadius: "14px",
+        borderRadius: "8px",
         display: "flex",
         gap: 1.5,
         alignItems: "center",
         flexWrap: "wrap",
-        borderColor: theme.vars.palette.primary.main,
-        bgcolor: `rgba(${theme.vars.palette.primary.mainChannel} / 0.04)`,
-      })}
+        bgcolor: "action.hover",
+      }}
     >
-      <ImageOutlinedIcon color="primary" />
+      <ImageOutlinedIcon sx={{ color: "text.secondary" }} />
       <TextField
         size="small"
         label="代替テキスト（alt）"
@@ -542,7 +555,7 @@ function ScheduleDialog({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ fontWeight: 800 }}>公開予定にする</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 700, fontSize: 18 }}>公開予定にする</DialogTitle>
       <DialogContent>
         <DialogContentText sx={{ mb: 2 }}>指定した日時になると、自動で公開されます。</DialogContentText>
         <TextField
@@ -572,7 +585,7 @@ function SideCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <Card>
       <CardContent sx={{ p: 2.5, "&:last-child": { pb: 2.5 } }}>
-        <Typography variant="overline" sx={{ color: "text.secondary", fontWeight: 800, letterSpacing: "0.12em" }}>
+        <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600 }}>
           {title}
         </Typography>
         <Box sx={{ mt: 1 }}>{children}</Box>

@@ -17,7 +17,7 @@ export default function BlogGrid({ blogs, emptyMessage }: { blogs: BlogSummary[]
   }
 
   return (
-    <Grid container spacing={{ xs: 2.5, md: 3.5 }}>
+    <Grid container rowSpacing={{ xs: 5, md: 7 }} columnSpacing={4}>
       {blogs.map((blog) => (
         <Grid key={blog.slug} size={{ xs: 12, sm: 6, md: 4 }}>
           <BlogCard blog={blog} />

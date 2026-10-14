@@ -66,30 +66,10 @@ function LoginForm() {
       onSubmit={handleSubmit}
       noValidate
       elevation={0}
-      sx={(theme) => ({
-        width: "100%",
-        maxWidth: 420,
-        p: { xs: 3.5, sm: 5 },
-        borderRadius: "24px",
-        border: `1px solid ${theme.vars.palette.divider}`,
-        boxShadow: "0 24px 64px rgba(15, 23, 42, 0.14)",
-      })}
+      sx={{ width: "100%", maxWidth: 380 }}
     >
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mb: 4 }}>
-        <Box
-          sx={{
-            display: "grid",
-            placeItems: "center",
-            width: 56,
-            height: 56,
-            borderRadius: "18px",
-            color: "#fff",
-            background: "linear-gradient(135deg, #6366f1, #db2777)",
-            boxShadow: "0 10px 24px rgba(99, 102, 241, 0.35)",
-          }}
-        >
-          <AutoStoriesRoundedIcon />
-        </Box>
+      <Box sx={{ mb: 4 }}>
+        <AutoStoriesRoundedIcon />
         <Typography variant="h5" component="h1" sx={{ mt: 2 }}>
           {SITE_NAME} 管理画面
         </Typography>
@@ -153,11 +133,11 @@ function LoginForm() {
         size="large"
         fullWidth
         disabled={submitting || !email || !password}
-        sx={{ mt: 4, height: 50 }}
+        sx={{ mt: 3, height: 44 }}
       >
         {submitting ? <CircularProgress size={22} color="inherit" /> : "ログイン"}
       </Button>
-      <Typography variant="caption" sx={{ display: "block", mt: 2.5, color: "text.secondary", textAlign: "center" }}>
+      <Typography variant="caption" sx={{ display: "block", mt: 2.5, color: "text.secondary" }}>
         ※パスワードを忘れた場合は、管理者に連絡してください
       </Typography>
     </Paper>
@@ -172,9 +152,6 @@ export default function LoginPage() {
         display: "grid",
         placeItems: "center",
         px: 2,
-        background:
-          "radial-gradient(50% 60% at 20% 20%, rgba(99, 102, 241, 0.22), transparent 70%)," +
-          "radial-gradient(50% 60% at 80% 80%, rgba(219, 39, 119, 0.18), transparent 70%)",
       }}
     >
       <Suspense>

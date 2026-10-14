@@ -6,14 +6,17 @@ import {
   searchParamsToObject,
   validationError,
 } from "@/lib/api";
+import { avatarUrl } from "@/lib/avatar";
 import { toExcerpt } from "@/lib/blog-content";
 import { prisma } from "@/lib/prisma";
 import { publicBlogWhere, thumbnailUrl } from "@/lib/public-blog";
 import type { Prisma } from "@/generated/prisma/client";
+import { blogTagsInclude, normalizeTagName, tagNames } from "@/lib/tags";
 
 const querySchema = paginationSchema.extend({
   q: z.string().trim().max(100).optional(),
   author_id: z.coerce.number().int().positive().optional(),
+  tag: z.string().max(60).transform(normalizeTagName).optional(),
 });
 
 export async function GET(request: Request) {
@@ -21,12 +24,14 @@ export async function GET(request: Request) {
     searchParamsToObject(new URL(request.url).searchParams),
   );
   if (!parsed.success) return validationError(parsed.error);
-  const { q, author_id: authorId, page, per_page: perPage } = parsed.data;
+  const { q, author_id: authorId, tag, page, per_page: perPage } = parsed.data;
 
   const where: Prisma.BlogWhereInput = {
     AND: [
       publicBlogWhere(),
       authorId ? { authorId } : {},
+      // タグは大文字・小文字を区別せずに一致させる
+      tag ? { tags: { some: { tag: { name: { equals: tag, mode: "insensitive" } } } } } : {},
       q
         ? {
             OR: [
@@ -51,8 +56,9 @@ export async function GET(request: Request) {
         bodyText: true,
         createdAt: true,
         publishedAt: true,
-        author: { select: { id: true, name: true } },
+        author: { select: { id: true, name: true, avatarStorageKey: true } },
         thumbnail: { select: { storageKey: true } },
+        tags: blogTagsInclude,
       },
     }),
   ]);
@@ -63,7 +69,8 @@ export async function GET(request: Request) {
       title: blog.title,
       excerpt: toExcerpt(blog.bodyText),
       thumbnail_url: thumbnailUrl(blog.thumbnail),
-      author: blog.author,
+      author: { id: blog.author.id, name: blog.author.name, avatar_url: avatarUrl(blog.author.avatarStorageKey) },
+      tags: tagNames(blog.tags),
       created_at: blog.createdAt,
       published_at: blog.publishedAt,
     })),

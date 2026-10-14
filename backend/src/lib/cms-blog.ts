@@ -8,6 +8,7 @@ import { forbiddenResponse } from "@/lib/auth";
 import { imageIds, toHtml, toText } from "@/lib/blog-content";
 import { prisma } from "@/lib/prisma";
 import { imageUrl } from "@/lib/storage";
+import { blogTagsInclude, normalizeTagName, tagNames } from "@/lib/tags";
 
 type Tx = Prisma.TransactionClient;
 
@@ -41,6 +42,7 @@ export const listQuerySchema = paginationSchema.extend({
     .optional(),
   author_id: z.coerce.number().int().positive().optional(),
   q: z.string().trim().max(100).optional(),
+  tag: z.string().max(60).transform(normalizeTagName).optional(),
   sort: z.enum(["updated_at", "created_at", "published_at", "deleted_at"]).default("updated_at"),
   order: z.enum(["desc", "asc"]).default("desc"),
 });
@@ -64,10 +66,11 @@ export function listOrderBy(sort: keyof typeof SORT_FIELDS, order: "asc" | "desc
 
 export const EMPTY_DOC: JSONContent = { type: "doc", content: [] };
 
-const blogInclude = {
+export const blogInclude = {
   author: { select: { id: true, name: true, deletedAt: true } },
   deletedBy: { select: { id: true, name: true } },
   images: { orderBy: { id: "asc" } },
+  tags: blogTagsInclude,
 } satisfies Prisma.BlogInclude;
 
 export type BlogWithRelations = Prisma.BlogGetPayload<{ include: typeof blogInclude }>;
@@ -168,6 +171,7 @@ export function serializeBlog(blog: BlogWithRelations, options: { body?: boolean
       height: image.height,
     })),
     thumbnail_url: blog.thumbnailImageId ? (urls.get(blog.thumbnailImageId) ?? null) : null,
+    tags: tagNames(blog.tags),
     author: { id: blog.author.id, name: blog.author.name, deleted: !!blog.author.deletedAt },
     editable: !deleted && status !== "public",
     allowed_transitions: deleted ? [] : [...TRANSITIONS[status], ...(status === "public" ? [] : ["deleted"])],

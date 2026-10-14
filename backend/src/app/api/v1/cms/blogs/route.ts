@@ -5,6 +5,7 @@ import { fieldError, paginationMeta, searchParamsToObject, validationError } fro
 import { authenticate } from "@/lib/auth";
 import {
   EMPTY_DOC,
+  blogInclude,
   bodyFields,
   findBlogForResponse,
   listOrderBy,
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
 
   const parsed = listQuerySchema.safeParse(searchParamsToObject(new URL(request.url).searchParams));
   if (!parsed.success) return validationError(parsed.error);
-  const { status, author_id: authorId, q, sort, order, page, per_page: perPage } = parsed.data;
+  const { status, author_id: authorId, q, tag, sort, order, page, per_page: perPage } = parsed.data;
 
   const now = new Date();
   const where: Prisma.BlogWhereInput = {
@@ -34,6 +35,7 @@ export async function GET(request: Request) {
       authorId && user.role === "admin" ? { authorId } : {},
       status ? { OR: status.map((s: BlogStatus) => statusWhere(s, now)) } : {},
       q ? { title: { contains: q, mode: "insensitive" } } : {},
+      tag ? { tags: { some: { tag: { name: { equals: tag, mode: "insensitive" } } } } } : {},
     ],
   };
 
@@ -44,11 +46,7 @@ export async function GET(request: Request) {
       orderBy: listOrderBy(sort, order),
       skip: (page - 1) * perPage,
       take: perPage,
-      include: {
-        author: { select: { id: true, name: true, deletedAt: true } },
-        deletedBy: { select: { id: true, name: true } },
-        images: { orderBy: { id: "asc" } },
-      },
+      include: blogInclude,
     }),
   ]);
 

@@ -38,7 +38,7 @@ docker compose exec backend npx prisma db seed
 
 | 作られるもの | 内容 |
 |---|---|
-| ユーザー | 管理者 `admin@example.com`、ユーザー `yamada@example.com`・`suzuki@example.com`（パスワードは全員 `password123`） |
+| ユーザー | 管理者 `admin@example.com`、ユーザー `yamada@example.com`・`suzuki@example.com`・`takahashi@example.com`・`ito@example.com`（パスワードは全員 `password123`）。アイコン画像は `backend/prisma/seed-assets/avatars/` |
 | ブログ | 公開12件・非公開1件・下書き1件・公開予定1件。画像は自動生成。実行結果に各記事の URL が出る |
 
 | 画面 | URL |

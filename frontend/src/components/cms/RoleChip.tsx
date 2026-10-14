@@ -3,9 +3,12 @@
 import Chip from "@mui/material/Chip";
 
 export default function RoleChip({ role }: { role: "admin" | "user" }) {
-  return role === "admin" ? (
-    <Chip size="small" label="管理者" color="secondary" sx={{ fontWeight: 700 }} />
-  ) : (
-    <Chip size="small" label="ユーザー" variant="outlined" sx={{ fontWeight: 700 }} />
+  return (
+    <Chip
+      size="small"
+      variant="outlined"
+      label={role === "admin" ? "管理者" : "ユーザー"}
+      sx={{ fontWeight: 500, ...(role === "admin" && { borderColor: "text.primary" }) }}
+    />
   );
 }

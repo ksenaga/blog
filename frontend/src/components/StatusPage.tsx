@@ -16,34 +16,21 @@ type Props = {
 export default function StatusPage({ code, icon, title, message, action }: Props) {
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 10, md: 16 }, textAlign: "center" }}>
-      <Box
-        sx={{
-          mx: "auto",
-          width: 96,
-          height: 96,
-          display: "grid",
-          placeItems: "center",
-          borderRadius: "28px",
-          color: "#fff",
-          background: "linear-gradient(135deg, #6366f1, #db2777)",
-          boxShadow: "0 18px 40px rgba(99, 102, 241, 0.35)",
-          "& svg": { fontSize: 44 },
-        }}
-      >
+      <Box sx={{ color: "text.secondary", "& svg": { fontSize: 48 } }}>
         {icon}
       </Box>
       {code && (
-        <Typography variant="overline" sx={{ display: "block", mt: 4, color: "primary.main", fontWeight: 800, letterSpacing: "0.3em" }}>
+        <Typography variant="overline" sx={{ display: "block", mt: 3, color: "text.secondary", fontWeight: 600, letterSpacing: "0.15em" }}>
           {code}
         </Typography>
       )}
-      <Typography variant="h4" component="h1" sx={{ mt: code ? 1 : 4, fontSize: { xs: 24, md: 30 } }}>
+      <Typography variant="h5" component="h1" sx={{ mt: code ? 0.5 : 3, fontSize: { xs: 20, md: 24 } }}>
         {title}
       </Typography>
       <Typography sx={{ mt: 2, color: "text.secondary", lineHeight: 1.9 }}>{message}</Typography>
       <Box sx={{ mt: 5 }}>
         {action ?? (
-          <Button href="/" variant="contained" size="large">
+          <Button href="/" variant="contained">
             トップへ戻る
           </Button>
         )}

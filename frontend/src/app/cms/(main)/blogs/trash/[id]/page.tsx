@@ -87,7 +87,7 @@ export default function TrashDetailPage({ params }: PageProps<"/cms/blogs/trash/
         </>
       )}
 
-      <Paper variant="outlined" sx={{ borderRadius: "20px", p: { xs: 2, sm: 4, md: 6 }, maxWidth: 880, mx: "auto", display: blog ? "block" : "none" }}>
+      <Paper variant="outlined" sx={{ borderRadius: "12px", p: { xs: 2, sm: 4, md: 6 }, maxWidth: 880, mx: "auto", display: blog ? "block" : "none" }}>
         <Typography variant="h4" component="h1" sx={{ fontSize: { xs: 24, md: 32 }, lineHeight: 1.4 }}>
           {blog?.title}
         </Typography>

@@ -25,14 +25,10 @@ export default function Header() {
       position="sticky"
       color="transparent"
       elevation={0}
-      sx={(theme) => ({
-        backdropFilter: "saturate(180%) blur(16px)",
-        backgroundColor: `rgba(${theme.vars.palette.background.defaultChannel} / 0.72)`,
-        borderBottom: `1px solid ${theme.vars.palette.divider}`,
-      })}
+      sx={{ bgcolor: "background.default", borderBottom: 1, borderColor: "divider" }}
     >
       <Container maxWidth="lg">
-        <Toolbar disableGutters sx={{ gap: 2, minHeight: { xs: 60, md: 68 } }}>
+        <Toolbar disableGutters sx={{ gap: 2, minHeight: { xs: 56, md: 64 } }}>
           <Box
             component={NextLink}
             href="/"
@@ -45,28 +41,15 @@ export default function Header() {
               flexShrink: 0,
             }}
           >
-            <Box
-              sx={{
-                display: "grid",
-                placeItems: "center",
-                width: 36,
-                height: 36,
-                borderRadius: "12px",
-                color: "#fff",
-                background: "linear-gradient(135deg, #6366f1, #db2777)",
-                boxShadow: "0 6px 16px rgba(99, 102, 241, 0.35)",
-              }}
-            >
-              <AutoStoriesRoundedIcon fontSize="small" />
-            </Box>
-            <Typography variant="h6" component="span" sx={{ fontWeight: 800, letterSpacing: "0.02em" }}>
+            <AutoStoriesRoundedIcon fontSize="small" />
+            <Typography variant="subtitle1" component="span" sx={{ fontWeight: 700 }}>
               {SITE_NAME}
             </Typography>
           </Box>
 
           <Box sx={{ flex: 1 }} />
 
-          <Box sx={{ display: { xs: "none", sm: "block" }, width: 320 }}>
+          <Box sx={{ display: { xs: "none", sm: "block" }, width: 280 }}>
             <Suspense>
               <SearchBox />
             </Suspense>

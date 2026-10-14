@@ -3,7 +3,6 @@
 // C-07. ユーザー一覧（管理者のみ）
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
-import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
@@ -20,6 +19,7 @@ import TableRow from "@mui/material/TableRow";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import PersonAddAlt1RoundedIcon from "@mui/icons-material/PersonAddAlt1Rounded";
+import AuthorAvatar from "@/components/AuthorAvatar";
 import AdminOnly from "@/components/cms/AdminOnly";
 import { useAuth } from "@/components/cms/AuthProvider";
 import { SearchField } from "@/components/cms/ListFilters";
@@ -54,7 +54,7 @@ function UserList() {
           </Button>
         }
       />
-      <Paper variant="outlined" sx={{ borderRadius: "20px", overflow: "hidden" }}>
+      <Paper variant="outlined" sx={{ borderRadius: "12px", overflow: "hidden" }}>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ p: 2 }}>
           <SearchField value={get("q")} onChange={(q) => set({ q })} placeholder="名前・メールアドレスで検索" />
           <TextField select size="small" label="ロール" value={get("role")} onChange={(event) => set({ role: event.target.value })} sx={{ minWidth: 140 }}>
@@ -93,7 +93,7 @@ function UserList() {
                 <TableRow key={user.id} hover onClick={() => open(user)} sx={{ cursor: "pointer", "&:last-child td": { borderBottom: 0 } }}>
                   <TableCell>
                     <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
-                      <Avatar sx={{ width: 32, height: 32, fontSize: 14, fontWeight: 700 }}>{user.name.charAt(0)}</Avatar>
+                      <AuthorAvatar author={user} size={30} />
                       <Box>
                         <Typography sx={{ fontWeight: 600 }}>
                           {user.name}

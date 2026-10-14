@@ -44,6 +44,10 @@
 | 5 | `login_attempts` | ログイン試行 | ログイン失敗の回数とロック | ✕ |
 | 6 | `notifications` | 通知 | ダッシュボードに表示する通知 | ✕ |
 | 7 | `audit_logs` | 操作ログ | 管理者が他人のリソースを操作した記録 | ✕（追記のみ） |
+| 8 | `tags` | タグ | タグの名前 | ✕ |
+| 9 | `blog_tags` | ブログタグ | ブログとタグの紐付け | ✕（ブログ・タグと一緒に削除） |
+| 10 | `tag_templates` | タグのテンプレート | よく使うタグの組み合わせ（全員で共有） | ✕ |
+| 11 | `tag_template_tags` | テンプレートのタグ | テンプレートとタグの紐付け | ✕（テンプレート・タグと一緒に削除） |
 
 ---
 
@@ -56,6 +60,11 @@ erDiagram
     users ||--o{ notifications : "受け取る"
     users ||--o{ audit_logs : "操作する"
     blogs ||--o{ blog_images : "持つ"
+    blogs ||--o{ blog_tags : "付ける"
+    tags ||--o{ blog_tags : "付けられる"
+    tag_templates ||--o{ tag_template_tags : "含む"
+    tags ||--o{ tag_template_tags : "含まれる"
+    users ||--o{ tag_templates : "作成する"
     blogs |o--o{ notifications : "対象になる"
 
     users {
@@ -134,6 +143,7 @@ erDiagram
 | `email` | varchar(255) | | | △ | ○ | | メールアドレス（ログインID）。小文字に揃えて保存する |
 | `password_hash` | varchar(255) | | | | ○ | | パスワードのハッシュ（bcrypt） |
 | `role` | varchar(10) | | | | ○ | `'user'` | `admin` / `user` |
+| `avatar_storage_key` | varchar(255) | | | | | NULL | アイコン画像の保存先（256×256 の WebP）。未設定なら名前の1文字目を表示する |
 | `created_at` | timestamptz | | | | ○ | 現在日時 | 作成日時 |
 | `updated_at` | timestamptz | | | | ○ | 現在日時 | 更新日時 |
 | `deleted_at` | timestamptz | | | | | NULL | 削除日時（論理削除） |
@@ -297,6 +307,56 @@ erDiagram
 | `target_id` には外部キーを付けない（対象がブログとユーザーの2種類あるため） |
 | 追記のみで、更新・削除はしない |
 | 本文 JSON は大きいため、`changes` には本文の中身ではなく「本文を変更した」ことだけを記録する |
+
+---
+
+### 4-8. tags（タグ）
+
+| カラム名 | 型 | PK | FK | UK | NN | 初期値 | 説明 |
+|---|---|---|---|---|---|---|---|
+| `id` | integer | ○ | | | ○ | 自動採番 | タグID |
+| `name` | varchar(30) | | | ○ | ○ | | タグ名（全角英数字は半角に、先頭の「#」は取り除いて保存する） |
+| `created_at` | timestamptz | | | | ○ | 現在日時 | 作成日時 |
+
+| 補足 |
+|---|
+| 大文字・小文字の違いは同じタグとして扱う。保存時に既存のタグを大文字・小文字を区別せずに探し、あればそれを使う |
+
+### 4-9. blog_tags（ブログタグ）
+
+| カラム名 | 型 | PK | FK | UK | NN | 初期値 | 説明 |
+|---|---|---|---|---|---|---|---|
+| `blog_id` | integer | ○ | blogs | | ○ | | ブログ |
+| `tag_id` | integer | ○ | tags | | ○ | | タグ |
+| `position` | integer | | | | ○ | 0 | 表示順（付けた順） |
+
+| 制約・インデックス | 内容 | 目的 |
+|---|---|---|
+| 主キー | `(blog_id, tag_id)` | 同じタグを二重に付けない |
+| インデックス | `tag_id` | タグでの絞り込みを速くする |
+| 外部キー | `ON DELETE CASCADE` | 紐付けだけのテーブルのため、ブログ・タグと一緒に削除する |
+
+### 4-10. tag_templates（タグのテンプレート）
+
+| カラム名 | 型 | PK | FK | UK | NN | 初期値 | 説明 |
+|---|---|---|---|---|---|---|---|
+| `id` | integer | ○ | | | ○ | 自動採番 | テンプレートID |
+| `name` | varchar(50) | | | | ○ | | テンプレート名 |
+| `created_by` | integer | | users | | ○ | | 作った人（編集・削除できるのは本人と管理者） |
+| `created_at` | timestamptz | | | | ○ | 現在日時 | 作成日時 |
+| `updated_at` | timestamptz | | | | ○ | 現在日時 | 更新日時 |
+
+### 4-11. tag_template_tags（テンプレートのタグ）
+
+| カラム名 | 型 | PK | FK | UK | NN | 初期値 | 説明 |
+|---|---|---|---|---|---|---|---|
+| `template_id` | integer | ○ | tag_templates | | ○ | | テンプレート（削除したら一緒に削除） |
+| `tag_id` | integer | ○ | tags | | ○ | | タグ（タグを削除したらテンプレートからも外れる） |
+| `position` | integer | | | | ○ | 0 | 表示順（登録した順） |
+
+| 補足 |
+|---|
+| `audit_logs.target_type` に `tag`・`tag_template` を追加。タグの作成・名前変更・削除は全員の記事に影響するため、誰が操作しても記録する。テンプレートは管理者が他人のものを操作したときに記録する |
 
 ---
 

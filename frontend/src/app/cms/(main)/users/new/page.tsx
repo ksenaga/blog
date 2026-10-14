@@ -49,7 +49,7 @@ function NewUserForm() {
         ユーザー一覧へ
       </Button>
       <PageHeader title="ユーザー作成" />
-      <Paper component="form" onSubmit={handleSubmit} noValidate variant="outlined" sx={{ borderRadius: "20px", p: { xs: 2.5, md: 4 }, maxWidth: 640 }}>
+      <Paper component="form" onSubmit={handleSubmit} noValidate variant="outlined" sx={{ borderRadius: "12px", p: { xs: 2.5, md: 4 }, maxWidth: 640 }}>
         <Stack spacing={3}>
           <TextField
             label="名前"

@@ -83,20 +83,20 @@ export default function EditorToolbar({ editor, onPickImages }: Props) {
 
   return (
     <Box
-      sx={(theme) => ({
+      sx={{
         position: "sticky",
-        top: { xs: 60, md: 68 },
+        top: { xs: 56, md: 64 },
         zIndex: 2,
         display: "flex",
         flexWrap: "wrap",
         alignItems: "center",
         gap: 0.25,
-        p: 0.75,
-        borderRadius: "14px",
-        border: `1px solid ${theme.vars.palette.divider}`,
-        backgroundColor: `rgba(${theme.vars.palette.background.paperChannel} / 0.9)`,
-        backdropFilter: "blur(12px)",
-      })}
+        p: 0.5,
+        borderRadius: "8px",
+        border: 1,
+        borderColor: "divider",
+        bgcolor: "background.paper",
+      }}
     >
       <ToolButton title="太字" active={state.bold} onClick={() => chain().toggleBold().run()}>
         <FormatBoldRoundedIcon />
@@ -118,7 +118,7 @@ export default function EditorToolbar({ editor, onPickImages }: Props) {
           active={state[`h${level}`]}
           onClick={() => chain().toggleHeading({ level }).run()}
         >
-          <Typography component="span" sx={{ fontWeight: 800, fontSize: 14, width: 24 }}>
+          <Typography component="span" sx={{ fontWeight: 700, fontSize: 14, width: 24 }}>
             H{level}
           </Typography>
         </ToolButton>
@@ -165,7 +165,7 @@ export default function EditorToolbar({ editor, onPickImages }: Props) {
       />
 
       <Dialog open={linkOpen} onClose={() => setLinkOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800 }}>リンク</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700, fontSize: 18 }}>リンク</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -215,11 +215,11 @@ function ToolButton({
           aria-pressed={active}
           disabled={disabled}
           onClick={onClick}
-          sx={(theme) => ({
-            borderRadius: "10px",
-            color: active ? theme.vars.palette.primary.main : "text.secondary",
-            bgcolor: active ? `rgba(${theme.vars.palette.primary.mainChannel} / 0.12)` : "transparent",
-          })}
+          sx={{
+            borderRadius: "6px",
+            color: active ? "text.primary" : "text.secondary",
+            bgcolor: active ? "action.selected" : "transparent",
+          }}
         >
           {children}
         </IconButton>

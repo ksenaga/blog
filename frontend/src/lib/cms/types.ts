@@ -18,6 +18,7 @@ export type CmsBlog = {
   first_published_at: string | null;
   images: BlogImage[];
   thumbnail_url: string | null;
+  tags: string[];
   author: { id: number; name: string; deleted: boolean };
   editable: boolean;
   allowed_transitions: (BlogStatus | "deleted")[];
@@ -34,6 +35,7 @@ export type CmsUserDetail = {
   name: string;
   email: string;
   role: "admin" | "user";
+  avatar_url: string | null;
   blog_count: number;
   created_at: string;
   updated_at: string;
@@ -53,4 +55,22 @@ export type Notification = {
   actor: { id: number; name: string };
   read_at: string | null;
   created_at: string;
+};
+
+export type CmsTag = {
+  id: number;
+  name: string;
+  blog_count: number;
+  template_count: number;
+  created_at: string;
+};
+
+export type TagTemplate = {
+  id: number;
+  name: string;
+  tags: string[];
+  created_by: { id: number; name: string };
+  editable: boolean;
+  created_at: string;
+  updated_at: string;
 };

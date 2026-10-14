@@ -76,17 +76,17 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
-          variant="filled"
+          variant="outlined"
           severity={toastState?.severity ?? "success"}
           onClose={() => setToastState(null)}
-          sx={{ minWidth: 280, boxShadow: 6 }}
+          sx={{ minWidth: 280, bgcolor: "background.paper", boxShadow: "0 4px 16px rgba(0, 0, 0, 0.08)" }}
         >
           {toastState?.message}
         </Alert>
       </Snackbar>
 
       <Dialog open={open} onClose={() => close(false)} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800 }}>{confirmOptions?.title}</DialogTitle>
+        <DialogTitle sx={{ fontWeight: 700, fontSize: 18 }}>{confirmOptions?.title}</DialogTitle>
         <DialogContent>
           {confirmOptions?.message && (
             <DialogContentText component="div" sx={{ whiteSpace: "pre-line" }}>

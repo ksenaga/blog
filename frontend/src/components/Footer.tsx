@@ -10,7 +10,7 @@ export default function Footer() {
       sx={{ mt: 10, py: 5, borderTop: 1, borderColor: "divider", textAlign: "center" }}
     >
       <Container maxWidth="lg">
-        <Typography variant="subtitle1" sx={{ fontWeight: 800 }}>
+        <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
           {SITE_NAME}
         </Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>

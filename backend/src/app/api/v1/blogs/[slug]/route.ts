@@ -1,10 +1,12 @@
 // P-2. ブログ詳細
 import { z } from "zod";
 import { errorResponse } from "@/lib/api";
+import { avatarUrl } from "@/lib/avatar";
 import { toExcerpt } from "@/lib/blog-content";
 import { prisma } from "@/lib/prisma";
 import { isPubliclyVisible, thumbnailUrl } from "@/lib/public-blog";
 import { imageUrl } from "@/lib/storage";
+import { blogTagsInclude, tagNames } from "@/lib/tags";
 
 export async function GET(
   _request: Request,
@@ -19,9 +21,10 @@ export async function GET(
   const blog = await prisma.blog.findUnique({
     where: { slug },
     include: {
-      author: { select: { id: true, name: true } },
+      author: { select: { id: true, name: true, avatarStorageKey: true } },
       thumbnail: { select: { storageKey: true } },
       images: { orderBy: { id: "asc" } },
+      tags: blogTagsInclude,
     },
   });
   if (!blog || blog.deletedAt) return notFound();
@@ -47,7 +50,8 @@ export async function GET(
         width: image.width,
         height: image.height,
       })),
-      author: blog.author,
+      author: { id: blog.author.id, name: blog.author.name, avatar_url: avatarUrl(blog.author.avatarStorageKey) },
+      tags: tagNames(blog.tags),
       created_at: blog.createdAt,
       published_at: blog.publishedAt,
       updated_at: blog.updatedAt,

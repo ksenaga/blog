@@ -78,7 +78,7 @@ function TrashList() {
         description="削除したブログを閲覧・復活できます。復活すると「非公開」（一度も公開していない場合は「下書き」）になります"
       />
 
-      <Paper variant="outlined" sx={{ borderRadius: "20px", overflow: "hidden" }}>
+      <Paper variant="outlined" sx={{ borderRadius: "12px", overflow: "hidden" }}>
         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ p: 2 }}>
           <SearchField value={get("q")} onChange={(q) => set({ q })} placeholder="タイトルで検索" />
           {isAdmin && <AuthorSelect value={get("author_id")} onChange={(value) => set({ author_id: value })} />}

@@ -16,11 +16,6 @@ import Skeleton from "@mui/material/Skeleton";
 import Typography from "@mui/material/Typography";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import EditNoteRoundedIcon from "@mui/icons-material/EditNoteRounded";
-import EventRoundedIcon from "@mui/icons-material/EventRounded";
-import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
-import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 import { useAuth } from "@/components/cms/AuthProvider";
 import { useFeedback } from "@/components/cms/FeedbackProvider";
 import PageHeader from "@/components/cms/PageHeader";
@@ -31,12 +26,12 @@ import { api } from "@/lib/cms/api";
 import { formatDateTime } from "@/lib/cms/format";
 import type { BlogStatus, Dashboard, Notification, Paginated } from "@/lib/cms/types";
 
-const COUNT_CARDS: { key: BlogStatus | "deleted"; label: string; icon: ReactNode; gradient: string; href: string }[] = [
-  { key: "draft", label: "下書き", icon: <EditNoteRoundedIcon />, gradient: "linear-gradient(135deg, #64748b, #94a3b8)", href: "/cms/blogs?status=draft" },
-  { key: "scheduled", label: "公開予定", icon: <EventRoundedIcon />, gradient: "linear-gradient(135deg, #0ea5e9, #6366f1)", href: "/cms/blogs?status=scheduled" },
-  { key: "public", label: "公開中", icon: <PublicRoundedIcon />, gradient: "linear-gradient(135deg, #10b981, #14b8a6)", href: "/cms/blogs?status=public" },
-  { key: "private", label: "非公開", icon: <VisibilityOffOutlinedIcon />, gradient: "linear-gradient(135deg, #f59e0b, #f97316)", href: "/cms/blogs?status=private" },
-  { key: "deleted", label: "削除済み", icon: <DeleteOutlineRoundedIcon />, gradient: "linear-gradient(135deg, #ef4444, #db2777)", href: "/cms/blogs/trash" },
+const COUNT_CARDS: { key: BlogStatus | "deleted"; label: string; href: string }[] = [
+  { key: "draft", label: "下書き", href: "/cms/blogs?status=draft" },
+  { key: "scheduled", label: "公開予定", href: "/cms/blogs?status=scheduled" },
+  { key: "public", label: "公開中", href: "/cms/blogs?status=public" },
+  { key: "private", label: "非公開", href: "/cms/blogs?status=private" },
+  { key: "deleted", label: "削除済み", href: "/cms/blogs/trash" },
 ];
 
 export default function DashboardPage() {
@@ -76,24 +71,10 @@ export default function DashboardPage() {
             <Card sx={{ height: "100%" }}>
               <CardActionArea href={card.href} sx={{ height: "100%" }}>
                 <CardContent sx={{ p: 2.5 }}>
-                  <Box
-                    sx={{
-                      display: "grid",
-                      placeItems: "center",
-                      width: 40,
-                      height: 40,
-                      borderRadius: "12px",
-                      color: "#fff",
-                      background: card.gradient,
-                      mb: 2,
-                    }}
-                  >
-                    {card.icon}
-                  </Box>
-                  <Typography variant="body2" sx={{ color: "text.secondary", fontWeight: 600 }}>
+                  <Typography variant="body2" sx={{ color: "text.secondary" }}>
                     {card.label}
                   </Typography>
-                  <Typography sx={{ fontSize: 32, fontWeight: 800, lineHeight: 1.2 }}>
+                  <Typography sx={{ mt: 1, fontSize: 28, fontWeight: 700, lineHeight: 1.2 }}>
                     {dashboard ? dashboard.blog_counts[card.key] : <Skeleton width={40} />}
                   </Typography>
                 </CardContent>
@@ -113,8 +94,8 @@ export default function DashboardPage() {
             ) : (
               <List disablePadding>
                 {notifications.map((notification) => (
-                  <ListItemButton key={notification.id} onClick={() => openNotification(notification)} sx={{ borderRadius: "12px", alignItems: "flex-start" }}>
-                    <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "secondary.main", mt: 1.1, mr: 1.5, flexShrink: 0 }} />
+                  <ListItemButton key={notification.id} onClick={() => openNotification(notification)} sx={{ borderRadius: "6px", alignItems: "flex-start" }}>
+                    <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: "error.main", mt: 1.2, mr: 1.5, flexShrink: 0 }} />
                     <ListItemText primary={notification.message} secondary={formatDateTime(notification.created_at)} />
                   </ListItemButton>
                 ))}
@@ -131,7 +112,7 @@ export default function DashboardPage() {
             ) : (
               <List disablePadding>
                 {dashboard.recent_blogs.map((blog) => (
-                  <ListItemButton key={blog.id} onClick={() => router.push(`/cms/blogs/${blog.id}/edit`)} sx={{ borderRadius: "12px", gap: 2 }}>
+                  <ListItemButton key={blog.id} onClick={() => router.push(`/cms/blogs/${blog.id}/edit`)} sx={{ borderRadius: "6px", gap: 2 }}>
                     <ListItemText
                       primary={blog.title}
                       secondary={`更新：${formatDateTime(blog.updated_at)}`}
@@ -155,7 +136,7 @@ function Panel({ title, moreHref, children }: { title: string; moreHref: string;
     <Card sx={{ height: "100%" }}>
       <CardContent sx={{ p: { xs: 2, md: 3 } }}>
         <Box sx={{ display: "flex", alignItems: "center", mb: 1.5 }}>
-          <Typography variant="h6" component="h2" sx={{ flex: 1 }}>
+          <Typography variant="subtitle1" component="h2" sx={{ flex: 1, fontWeight: 700 }}>
             {title}
           </Typography>
           <Button href={moreHref} size="small" endIcon={<ChevronRightRoundedIcon />}>

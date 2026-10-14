@@ -2,6 +2,7 @@
 import { z } from "zod";
 import type { Prisma } from "@/generated/prisma/client";
 import { errorResponse } from "@/lib/api";
+import { avatarUrl } from "@/lib/avatar";
 import { forbiddenResponse, type AuthUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -32,6 +33,7 @@ export function serializeUser(user: UserWithCount) {
     name: user.name,
     email: user.email,
     role: user.role,
+    avatar_url: avatarUrl(user.avatarStorageKey),
     blog_count: user._count.blogs,
     created_at: user.createdAt,
     updated_at: user.updatedAt,

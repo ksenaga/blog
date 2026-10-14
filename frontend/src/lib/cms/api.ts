@@ -4,7 +4,7 @@
 // アクセストークンはメモリだけに持ち、401 のときはリフレッシュトークン（Cookie）で再発行して1回だけやり直す
 
 export type Role = "admin" | "user";
-export type CmsUser = { id: number; name: string; email: string; role: Role };
+export type CmsUser = { id: number; name: string; email: string; role: Role; avatar_url: string | null };
 export type TokenResponse = { access_token: string; expires_in: number; user: CmsUser };
 
 export class ApiError extends Error {
