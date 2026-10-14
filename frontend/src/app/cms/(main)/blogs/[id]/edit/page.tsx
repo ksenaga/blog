@@ -468,6 +468,7 @@ export default function BlogEditPage({ params }: PageProps<"/cms/blogs/[id]/edit
               <Info label="作成" value={formatDateTime(blog.created_at)} />
               <Info label="更新" value={formatDateTime(blog.updated_at)} />
               <Info label="画像" value={`${blog.images.length}枚`} />
+              <Info label="いいね" value={`${blog.like_count}件`} />
             </SideCard>
 
             {can("deleted") && (

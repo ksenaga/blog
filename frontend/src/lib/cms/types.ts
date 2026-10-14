@@ -19,6 +19,7 @@ export type CmsBlog = {
   images: BlogImage[];
   thumbnail_url: string | null;
   tags: string[];
+  like_count: number;
   author: { id: number; name: string; deleted: boolean };
   editable: boolean;
   allowed_transitions: (BlogStatus | "deleted")[];

@@ -20,6 +20,7 @@ export type BlogSummary = {
 export type BlogDetail = Omit<BlogSummary, "excerpt"> & {
   excerpt: string;
   body_html: string;
+  like_count: number;
   images: { id: number; url: string; alt: string; width: number; height: number }[];
   updated_at: string;
 };

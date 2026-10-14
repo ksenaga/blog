@@ -25,6 +25,7 @@ export async function GET(
       thumbnail: { select: { storageKey: true } },
       images: { orderBy: { id: "asc" } },
       tags: blogTagsInclude,
+      _count: { select: { likes: true } },
     },
   });
   if (!blog || blog.deletedAt) return notFound();
@@ -52,6 +53,7 @@ export async function GET(
       })),
       author: { id: blog.author.id, name: blog.author.name, avatar_url: avatarUrl(blog.author.avatarStorageKey) },
       tags: tagNames(blog.tags),
+      like_count: blog._count.likes,
       created_at: blog.createdAt,
       published_at: blog.publishedAt,
       updated_at: blog.updatedAt,

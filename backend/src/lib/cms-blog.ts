@@ -71,6 +71,7 @@ export const blogInclude = {
   deletedBy: { select: { id: true, name: true } },
   images: { orderBy: { id: "asc" } },
   tags: blogTagsInclude,
+  _count: { select: { likes: true } },
 } satisfies Prisma.BlogInclude;
 
 export type BlogWithRelations = Prisma.BlogGetPayload<{ include: typeof blogInclude }>;
@@ -172,6 +173,7 @@ export function serializeBlog(blog: BlogWithRelations, options: { body?: boolean
     })),
     thumbnail_url: blog.thumbnailImageId ? (urls.get(blog.thumbnailImageId) ?? null) : null,
     tags: tagNames(blog.tags),
+    like_count: blog._count.likes,
     author: { id: blog.author.id, name: blog.author.name, deleted: !!blog.author.deletedAt },
     editable: !deleted && status !== "public",
     allowed_transitions: deleted ? [] : [...TRANSITIONS[status], ...(status === "public" ? [] : ["deleted"])],

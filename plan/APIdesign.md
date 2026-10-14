@@ -133,7 +133,10 @@
 | No | メソッド | パス | 概要 | 管理者 | ユーザー | 閲覧者 |
 |---|---|---|---|---|---|---|
 | P-1 | GET | `/blogs` | ブログ一覧・検索 | ○ | ○ | ○ |
-| P-2 | GET | `/blogs/{slug}` | ブログ詳細 | ○ | ○ | ○ |
+| P-2 | GET | `/blogs/{slug}` | ブログ詳細（`like_count` を含む） | ○ | ○ | ○ |
+| P-3 | GET | `/blogs/{slug}/like` | いいねの状態（`like_count`・`liked`） | ○ | ○ | ○ |
+| P-4 | POST | `/blogs/{slug}/like` | いいねする（Cookie `visitor_id` がなければ発行。何度押しても1回） | ○ | ○ | ○ |
+| P-5 | DELETE | `/blogs/{slug}/like` | いいねを取り消す | ○ | ○ | ○ |
 | A-1 | POST | `/auth/login` | ログイン | ○ | ○ | ✕ |
 | A-2 | POST | `/auth/refresh` | アクセストークンの再発行 | ○ | ○ | ✕ |
 | A-3 | POST | `/auth/logout` | ログアウト | ○ | ○ | ✕ |

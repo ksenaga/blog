@@ -1,7 +1,7 @@
 // テスト用データの作成（開発環境専用）
 // 実行：docker compose exec backend npx prisma db seed
 // ※ 実行すると、DB の全データとアップロード済みの画像を削除してから作り直す
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import bcrypt from "bcrypt";
 import sharp from "sharp";
 import type { JSONContent } from "@tiptap/core";
@@ -343,7 +343,7 @@ const blogs: SeedBlog[] = [
 async function main() {
   console.log("既存のデータを削除しています…");
   await prisma.$executeRawUnsafe(
-    'TRUNCATE "notifications", "audit_logs", "refresh_tokens", "login_attempts", "tag_template_tags", "tag_templates", "blog_tags", "tags", "blog_images", "blogs", "users" RESTART IDENTITY CASCADE',
+    'TRUNCATE "notifications", "audit_logs", "refresh_tokens", "login_attempts", "blog_likes", "tag_template_tags", "tag_templates", "blog_tags", "tags", "blog_images", "blogs", "users" RESTART IDENTITY CASCADE',
   );
   await rm(`${process.env.LOCAL_STORAGE_DIR ?? "./storage"}/blogs`, { recursive: true, force: true });
   await rm(`${process.env.LOCAL_STORAGE_DIR ?? "./storage"}/avatars`, { recursive: true, force: true });
@@ -456,6 +456,17 @@ async function main() {
     });
 
     await setBlogTags(prisma, blog.id, seed.tags);
+
+    // 公開済みの記事には、テスト用のいいねを付ける（新しい記事ほど少なめ）
+    if (blog.status === "public" || blog.status === "private") {
+      const likeCount = Math.max(0, Math.round(seed.daysAgo / 6 + (index % 4) * 3));
+      await prisma.blogLike.createMany({
+        data: Array.from({ length: likeCount }, (_, i) => ({
+          blogId: blog.id,
+          visitorHash: createHash("sha256").update(`seed-${blog.id}-${i}`).digest("hex"),
+        })),
+      });
+    }
 
     console.log(`  [${seed.status}] /blog/${blog.slug}  ${seed.title}`);
   }

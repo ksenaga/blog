@@ -10,6 +10,7 @@ import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
+import ArticleActions from "@/components/ArticleActions";
 import ArticleBody from "@/components/ArticleBody";
 import ArticleMeta from "@/components/ArticleMeta";
 import AuthorAvatar from "@/components/AuthorAvatar";
@@ -18,6 +19,7 @@ import NextLink from "@/components/NextLink";
 import TagList from "@/components/TagList";
 import { getBlog, getBlogs } from "@/lib/api";
 import { formatDate, isSameDay, readingMinutes } from "@/lib/format";
+import { SITE_URL } from "@/lib/site";
 
 // メタ情報と本文で同じ記事を2回取りに行かないようにする
 const loadBlog = cache(async (slug: string) => {
@@ -79,7 +81,16 @@ export default async function BlogPage({ params }: PageProps<"/blog/[slug]">) {
       <Container maxWidth="md" component="article" sx={{ mt: { xs: 4, md: 6 } }}>
         <ArticleBody html={blog.body_html} />
 
-        <Divider sx={{ my: 6 }} />
+        {/* いいね・シェア（この記事を書いた人のすぐ上） */}
+        <Box sx={{ mt: 6 }}>
+          <ArticleActions
+            slug={blog.slug}
+            title={blog.title}
+            url={`${SITE_URL}/blog/${blog.slug}`}
+            initialLikeCount={blog.like_count}
+          />
+        </Box>
+        <Divider sx={{ my: 4 }} />
         <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
           <AuthorAvatar author={blog.author} size={56} />
           <Box>
