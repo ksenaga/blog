@@ -1,0 +1,84 @@
+# ローカル開発用の Docker Compose
+# 起動：docker compose up -d
+# ブラウザからは frontend（http://localhost:3000）にだけアクセスする。
+# /api/v1/* と /uploads/*（画像）は frontend（Next.js の rewrites）が backend へ転送する。
+
+services:
+  # 画面（閲覧側・CMS）
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      # rewrites の転送先（Docker のネットワーク内の backend）
+      BACKEND_URL: http://backend:4000
+      IMAGE_MAX_SIZE_MB: ${IMAGE_MAX_SIZE_MB:-10}
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+
+  # API（Next.js の Route Handlers のみ）
+  backend:
+    build: ./backend
+    ports:
+      # 動作確認用。ブラウザからは frontend 経由でアクセスする
+      - "4000:4000"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-blog}:${POSTGRES_PASSWORD:-blog}@db:5432/${POSTGRES_DB:-blog}
+      STORAGE_DRIVER: local
+      LOCAL_STORAGE_DIR: /app/storage
+      IMAGE_BASE_URL: /uploads
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - /app/.next
+      - uploads:/app/storage
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 定期バッチ（公開予定の公開・未使用画像の削除など）。backend と同じコードを使う
+  worker:
+    build: ./backend
+    command: npm run worker
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-blog}:${POSTGRES_PASSWORD:-blog}@db:5432/${POSTGRES_DB:-blog}
+      STORAGE_DRIVER: local
+      LOCAL_STORAGE_DIR: /app/storage
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - uploads:/app/storage
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # DB
+  db:
+    image: postgres:16
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-blog}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-blog}
+      POSTGRES_DB: ${POSTGRES_DB:-blog}
+      TZ: UTC
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-blog} -d ${POSTGRES_DB:-blog}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db-data:
+  # アップロードした画像（ローカル開発用の保存先）
+  uploads:

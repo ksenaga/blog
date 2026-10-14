@@ -1,0 +1,160 @@
+// DB設計書（plan/DBdesign.md）に対応するスキーマ
+// CHECK 制約・部分インデックス・pg_trgm 拡張は Prisma で書けないため、
+// マイグレーションSQL（prisma/migrations/*/migration.sql）に手で追記している。
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// 4-1. ユーザー
+model User {
+  id           Int       @id @default(autoincrement())
+  name         String    @db.VarChar(50)
+  // 削除されていないユーザーの中でのみユニーク（部分ユニークインデックスはSQLで作成）
+  email        String    @db.VarChar(255)
+  passwordHash String    @map("password_hash") @db.VarChar(255)
+  // 'admin' / 'user'（CHECK 制約はSQLで作成）
+  role         String    @default("user") @db.VarChar(10)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+
+  blogs              Blog[]         @relation("BlogAuthor")
+  deletedBlogs       Blog[]         @relation("BlogDeletedBy")
+  uploadedImages     BlogImage[]
+  refreshTokens      RefreshToken[]
+  notifications      Notification[] @relation("NotificationRecipient")
+  actedNotifications Notification[] @relation("NotificationActor")
+  auditLogs          AuditLog[]
+
+  @@map("users")
+}
+
+// 4-2. ブログ
+model Blog {
+  id               Int       @id @default(autoincrement())
+  slug             String    @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authorId         Int       @map("author_id")
+  title            String    @db.VarChar(100)
+  bodyJson         Json      @default("{\"type\":\"doc\",\"content\":[]}") @map("body_json")
+  bodyText         String    @default("") @map("body_text")
+  bodyHtml         String    @default("") @map("body_html")
+  thumbnailImageId Int?      @map("thumbnail_image_id")
+  // 'draft' / 'scheduled' / 'private' / 'public'（CHECK 制約はSQLで作成）
+  status           String    @default("draft") @db.VarChar(10)
+  publishedAt      DateTime? @map("published_at") @db.Timestamptz
+  firstPublishedAt DateTime? @map("first_published_at") @db.Timestamptz
+  version          Int       @default(1)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
+  deletedById      Int?      @map("deleted_by")
+
+  author        User           @relation("BlogAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  deletedBy     User?          @relation("BlogDeletedBy", fields: [deletedById], references: [id], onDelete: Restrict)
+  // 画像は定期バッチで物理削除されるため、サムネイルは NULL に戻す
+  thumbnail     BlogImage?     @relation("BlogThumbnail", fields: [thumbnailImageId], references: [id], onDelete: SetNull)
+  images        BlogImage[]    @relation("BlogImages")
+  notifications Notification[]
+
+  // キーワードの部分一致検索（pg_trgm 拡張はマイグレーションSQLで作成）
+  @@index([title(ops: raw("gin_trgm_ops"))], type: Gin, map: "blogs_title_trgm_idx")
+  @@index([bodyText(ops: raw("gin_trgm_ops"))], type: Gin, map: "blogs_body_text_trgm_idx")
+  @@map("blogs")
+}
+
+// 4-3. ブログ画像
+model BlogImage {
+  id               Int      @id @default(autoincrement())
+  blogId           Int      @map("blog_id")
+  storageKey       String   @unique @map("storage_key") @db.VarChar(255)
+  alt              String   @default("") @db.VarChar(200)
+  width            Int
+  height           Int
+  fileSize         Int      @map("file_size")
+  originalFilename String   @map("original_filename") @db.VarChar(255)
+  uploadedById     Int      @map("uploaded_by")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  blog         Blog   @relation("BlogImages", fields: [blogId], references: [id], onDelete: Restrict)
+  uploadedBy   User   @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  thumbnailFor Blog[] @relation("BlogThumbnail")
+
+  @@index([blogId])
+  @@map("blog_images")
+}
+
+// 4-4. リフレッシュトークン
+model RefreshToken {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @map("user_id")
+  tokenHash    String    @unique @map("token_hash") @db.Char(64)
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamptz
+  replacedById Int?      @unique @map("replaced_by_id")
+  userAgent    String?   @map("user_agent") @db.VarChar(500)
+  ipAddress    String?   @map("ip_address") @db.Inet
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user       User          @relation(fields: [userId], references: [id], onDelete: Restrict)
+  // 期限切れのトークンは定期バッチで削除するため、参照は NULL に戻す
+  replacedBy RefreshToken? @relation("TokenReplacement", fields: [replacedById], references: [id], onDelete: SetNull)
+  replaces   RefreshToken? @relation("TokenReplacement")
+
+  @@map("refresh_tokens")
+}
+
+// 4-5. ログイン試行
+model LoginAttempt {
+  email       String    @id @db.VarChar(255)
+  failedCount Int       @default(0) @map("failed_count")
+  lockedUntil DateTime? @map("locked_until") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  @@map("login_attempts")
+}
+
+// 4-6. 通知
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  actorId   Int       @map("actor_id")
+  blogId    Int?      @map("blog_id")
+  // CHECK 制約はSQLで作成
+  type      String    @db.VarChar(50)
+  message   String    @db.VarChar(255)
+  readAt    DateTime? @map("read_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user  User  @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Restrict)
+  actor User  @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Restrict)
+  blog  Blog? @relation(fields: [blogId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+// 4-7. 操作ログ（追記のみ）
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  actorId    Int      @map("actor_id")
+  action     String   @db.VarChar(50)
+  targetType String   @map("target_type") @db.VarChar(20)
+  // 対象がブログとユーザーの2種類あるため、外部キーは付けない
+  targetId   Int      @map("target_id")
+  changes    Json?
+  ipAddress  String?  @map("ip_address") @db.Inet
+  userAgent  String?  @map("user_agent") @db.VarChar(500)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  actor User @relation(fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([targetType, targetId, createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
+  @@map("audit_logs")
+}

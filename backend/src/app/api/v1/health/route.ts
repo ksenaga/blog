@@ -1,0 +1,11 @@
+import { prisma } from "@/lib/prisma";
+
+// 動作確認用：API と DB に接続できるかを返す
+export async function GET() {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return Response.json({ status: "ok", db: "ok" });
+  } catch {
+    return Response.json({ status: "error", db: "error" }, { status: 503 });
+  }
+}
